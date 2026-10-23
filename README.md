@@ -29,3 +29,7 @@ One connected pipeline that takes every change from a pull request to a running,
 - ⬜ **M6 Observability**: Prometheus and Grafana metrics, ELK log pipeline
 - ⬜ **M7 AI incident analysis**: log-driven diagnosis and a blue-green release
 - ⬜ **M8 Report**: architecture diagram, documentation, v1.0.0 release
+
+## License
+
+Released under the [MIT License](LICENSE).
