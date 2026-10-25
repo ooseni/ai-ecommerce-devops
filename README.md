@@ -30,6 +30,15 @@ One connected pipeline that takes every change from a pull request to a running,
 - ⬜ **M7 AI incident analysis**: log-driven diagnosis and a blue-green release
 - ⬜ **M8 Report**: architecture diagram, documentation, v1.0.0 release
 
+## Credits
+
+The e-commerce application in [`application/`](application/) is
+[mern-ecommerce](https://github.com/mohamedsamara/mern-ecommerce) by Mohamed Samara,
+vendored at commit `7f73dfb` under its [MIT License](application/LICENSE).
+
+Changed here: four homepage banners were resized to 1920 px wide.
+
 ## License
 
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE). The vendored application keeps its own
+license (see Credits).
