@@ -5,6 +5,8 @@
 helm/**/*.tgz
 # Ansible: retry files left by failed playbook runs
 *.retry
+# Runtime logs and PID files written by scripts/deploy.sh
+.run/
 
 # --- Secrets, credentials and key material: never commit these ---
 # Environment files (commit a .env.example with placeholder values instead)
