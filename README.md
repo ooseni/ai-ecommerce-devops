@@ -18,10 +18,27 @@ One connected pipeline that takes every change from a pull request to a running,
 - **Observe** metrics (Prometheus, Grafana) and logs (Elasticsearch, Logstash, Kibana)
 - **Diagnose** incidents with an AI tool that reads the error logs
 
+## Run it locally
+
+Needs Linux or WSL2 with Docker, Node.js 24, npm and openssl.
+
+```bash
+scripts/deploy.sh        # set up, then start MongoDB, the API and the shop; waits until healthy
+scripts/health-check.sh  # PASS or FAIL for MongoDB, the API and the shop (exit code 0 or 1)
+scripts/backup.sh        # compressed database dump in backups/, newest 7 kept
+scripts/cleanup.sh       # stop everything; the data stays in the Docker volume
+```
+
+The shop opens at <http://localhost:8080> and the API answers under <http://localhost:3000/api>.
+To load an admin user and 100 sample products, run
+`ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='...' scripts/setup.sh` once.
+How the app is built: [docs/app-analysis.md](docs/app-analysis.md). Problems met and
+fixed along the way: [docs/challenges-log.md](docs/challenges-log.md).
+
 ## Roadmap
 
-- ⬜ **M0 Foundation**: toolchain, repository, branch protection, secret scanning, app import
-- ⬜ **M1 App analysis and Bash**: run the app natively, document it, automation scripts
+- ✅ **M0 Foundation**: toolchain, repository, branch protection, secret scanning, app import
+- ✅ **M1 App analysis and Bash**: run the app natively, document it, automation scripts
 - ⬜ **M2 Containers**: Dockerfiles, Nginx reverse proxy, Docker Compose
 - ⬜ **M3 CI/CD and DevSecOps**: Jenkins pipeline, security scans, images pushed to GHCR
 - ⬜ **M4 Kubernetes and Helm**: manifests and a Helm chart deployed to a local k3d cluster
@@ -30,6 +47,15 @@ One connected pipeline that takes every change from a pull request to a running,
 - ⬜ **M7 AI incident analysis**: log-driven diagnosis and a blue-green release
 - ⬜ **M8 Report**: architecture diagram, documentation, v1.0.0 release
 
+## Credits
+
+The e-commerce application in [`application/`](application/) is
+[mern-ecommerce](https://github.com/mohamedsamara/mern-ecommerce) by Mohamed Samara,
+vendored at commit `7f73dfb` under its [MIT License](application/LICENSE).
+
+Changed here: four homepage banners were resized to 1920 px wide.
+
 ## License
 
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE). The vendored application keeps its own
+license (see Credits).
