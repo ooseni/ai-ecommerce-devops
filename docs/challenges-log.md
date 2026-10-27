@@ -8,6 +8,8 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 | 2 | 2026-10-25 | M0 | Banner images blocked by the large-file guard |
 | 3 | 2026-10-25 | M1 | 227 known vulnerabilities in upstream packages |
 | 4 | 2026-10-26 | M1 | MongoDB down after a WSL restart |
+| 5 | 2026-10-27 | M1 | Health check reported MongoDB down while it was up |
+| 6 | 2026-10-27 | M1 | VS Code split two .gitignore patterns on save |
 
 ## 1. Trivy package not found (M0)
 
@@ -35,4 +37,18 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 - **Symptom:** the seed script failed with `MongooseServerSelectionError: connect ECONNREFUSED 127.0.0.1:27017`.
 - **Diagnosis:** `docker exec` answered `container … is not running`. `docker ps -a` showed `mongo-dev` as `Exited (255)`: WSL had restarted overnight, and the container had no restart policy.
 - **Fix:** `docker start mongo-dev`. The data was safe in the `mongo-dev-data` volume.
-- **Lesson:** ECONNREFUSED means nothing is listening on that port. Follow-up: make `scripts/setup.sh` start the container when it is down.
+- **Lesson:** ECONNREFUSED means nothing is listening on that port. Follow-up, done: `scripts/setup.sh` now starts the container, or creates it, when it is down.
+
+## 5. Health check reported MongoDB down while it was up (M1)
+
+- **Symptom:** `scripts/health-check.sh` printed `FAIL  MongoDB` although the API was connected to the database and serving products.
+- **Diagnosis:** the check ran `docker exec mongo-dev mongo --eval ...` with `2>/dev/null`, which hid the real error. Run without the redirect, it printed `exec: "mongo": executable file not found in $PATH`: the legacy `mongo` shell was removed in MongoDB 6.0, and the `mongo:7.0` image ships only `mongosh`.
+- **Fix:** `docker exec mongo-dev mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok'`, which prints `1` when the server answers.
+- **Lesson:** a check that can never pass is as useless as one that never fails. Prove both outcomes, and when a check fails, run its command without `2>/dev/null` to see why.
+
+## 6. VS Code split two .gitignore patterns on save (M1)
+
+- **Symptom:** `git diff .gitignore` showed changes on lines nobody had edited: `Icon[\r]` and `.HFS+ Private Directory Data[\r]` were each split over two lines.
+- **Cause:** GitHub's macOS template puts a literal carriage return inside the brackets, because macOS stores custom folder icons in a file named `Icon` plus a carriage return. VS Code treats a lone carriage return as a line break and saved it as a newline, so both patterns stopped matching.
+- **Fix:** `git restore .gitignore`, then added the new lines with `sed -i '/^anchor$/a ...'`, which leaves the other bytes alone. `grep -c $'\r' .gitignore` must print `2`.
+- **Lesson:** read `git diff` before every `git add`: it shows what the tools changed, not only what you typed. Edit `.gitignore` with `sed`, not VS Code.
