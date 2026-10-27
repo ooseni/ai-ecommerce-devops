@@ -7,6 +7,8 @@ helm/**/*.tgz
 *.retry
 # Runtime logs and PID files written by scripts/deploy.sh
 .run/
+# Database dumps written by scripts/backup.sh: they hold user emails and password hashes
+backups/
 
 # --- Secrets, credentials and key material: never commit these ---
 # Environment files (commit a .env.example with placeholder values instead)
