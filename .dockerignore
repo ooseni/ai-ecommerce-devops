@@ -1,0 +1,12 @@
+# The build context is the repo root. Send Docker only what the images need:
+# ignore everything, then allow the app sources and the docker/ folder back in.
+*
+!application/server
+!application/client
+!docker
+
+# Never send these, even inside the allowed folders.
+**/node_modules
+**/dist
+**/.env
+**/*.log
