@@ -1,0 +1,55 @@
+# The whole shop in containers: MongoDB, the API, and Nginx serving the React app.
+# From the repo root: docker compose up -d --build, then open http://127.0.0.1:8080
+name: mern-shop
+
+services:
+  mongo:
+    image: mongo:7.0
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  server:
+    build:
+      context: .
+      dockerfile: docker/server.Dockerfile
+    image: mern-shop-server:local
+    env_file: application/server/.env
+    environment:
+      MONGO_URI: mongodb://mongo:27017/mern_ecommerce
+    init: true
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  client:
+    build:
+      context: .
+      dockerfile: docker/client.Dockerfile
+      args:
+        API_URL: /api
+    image: mern-shop-client:local
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+
+
