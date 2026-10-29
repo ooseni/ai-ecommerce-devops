@@ -10,6 +10,10 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 | 4 | 2026-10-26 | M1 | MongoDB down after a WSL restart |
 | 5 | 2026-10-27 | M1 | Health check reported MongoDB down while it was up |
 | 6 | 2026-10-27 | M1 | VS Code split two .gitignore patterns on save |
+| 7 | 2026-10-28 | M2 | API image crashed: Cannot find module 'chalk' |
+| 8 | 2026-10-28 | M2 | Containerised API could not reach MongoDB on 127.0.0.1 |
+| 9 | 2026-10-29 | M2 | Compose rejected compose.yaml |
+| 10 | 2026-10-29 | M2 | Support chat cannot connect at localhost:8080 |
 
 ## 1. Trivy package not found (M0)
 
@@ -52,3 +56,31 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 - **Cause:** GitHub's macOS template puts a literal carriage return inside the brackets, because macOS stores custom folder icons in a file named `Icon` plus a carriage return. VS Code treats a lone carriage return as a line break and saved it as a newline, so both patterns stopped matching.
 - **Fix:** `git restore .gitignore`, then added the new lines with `sed -i '/^anchor$/a ...'`, which leaves the other bytes alone. `grep -c $'\r' .gitignore` must print `2`.
 - **Lesson:** read `git diff` before every `git add`: it shows what the tools changed, not only what you typed. Edit `.gitignore` with `sed`, not VS Code.
+
+## 7. API image crashed: Cannot find module 'chalk' (M2)
+
+- **Symptom:** the first run of the API image exited at once with `Error: Cannot find module 'chalk'` at `index.js:3`.
+- **Cause:** upstream lists `chalk` under `devDependencies`, but `index.js`, `utils/db.js` and `utils/seed.js` load it at runtime. The image installs with `npm ci --omit=dev`, which rightly leaves dev packages out. It never showed natively because `setup.sh` runs a full `npm ci`.
+- **Fix:** `npm install --save-prod chalk@2.4.2` in `application/server`, which moves it to `dependencies`; the lockfile only loses its `"dev": true` flags. `--omit=dev` stays, so nodemon and other dev tools stay out of production.
+- **Lesson:** read the error literally. A missing module is a packaging fault, not a database or network one.
+
+## 8. Containerised API could not reach MongoDB on 127.0.0.1 (M2)
+
+- **Symptom:** the API container, started with the local `.env`, served requests but readiness stayed `503`, with `ECONNREFUSED 127.0.0.1:27017` after 30 seconds.
+- **Cause:** the local `.env` points `MONGO_URI` at `127.0.0.1`. Inside a container, `127.0.0.1` is the container itself, not the WSL host, and nothing listens on 27017 there.
+- **Fix:** Compose puts the three services on one private network, where each service name is a DNS name, and sets `MONGO_URI` to `mongodb://mongo:27017/mern_ecommerce` under `environment:`, which wins over the same key in `env_file:`. Readiness through Nginx then reported `db: connected`.
+- **Lesson:** `localhost` in a container means that container. Containers find each other by service name.
+
+## 9. Compose rejected compose.yaml (M2)
+
+- **Symptom:** `docker compose config --quiet` failed with `additional properties 'client', 'server' not allowed`.
+- **Cause:** the `server:` and `client:` blocks were typed at column 0, which made them top-level keys beside `services:` instead of services inside it.
+- **Fix:** indented both blocks two spaces under `services:`. The file validated and the stack started.
+- **Lesson:** in YAML, indentation is the structure. Validate with `docker compose config --quiet` before starting anything; without `--quiet` it prints the resolved file, `.env` secrets included.
+
+## 10. Support chat cannot connect at localhost:8080 (M2)
+
+- **Symptom:** opened at `http://localhost:8080`, the shop sends its socket.io connection to `127.0.0.1:3000`, which refuses it (`curl` exit 7). Through Nginx at `http://127.0.0.1:8080/socket.io/` the handshake succeeds and offers the WebSocket upgrade.
+- **Cause:** `application/client/app/constants/index.js` sends the socket to `http://127.0.0.1:3000` whenever the host name contains `localhost`, a shortcut for the native setup. The container stack publishes only Nginx, so port 3000 is unreachable. The socket opens only for a signed-in user.
+- **Fix (for now):** browse the container stack at `http://127.0.0.1:8080`. The lasting fix, always using the page's own address, is planned with the other upstream changes.
+- **Lesson:** front-end code runs in the user's browser, outside the Docker network, so every address it uses must be one the browser can reach.
