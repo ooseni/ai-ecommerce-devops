@@ -35,11 +35,35 @@ To load an admin user and 100 sample products, run
 How the app is built: [docs/app-analysis.md](docs/app-analysis.md). Problems met and
 fixed along the way: [docs/challenges-log.md](docs/challenges-log.md).
 
+## Run it with Docker
+
+Needs Docker with the Compose plugin. The API reads its settings from
+`application/server/.env` when it starts: create that file once with `scripts/setup.sh`,
+which also writes a random `JWT_SECRET`. Stop the native stack first with
+`scripts/cleanup.sh`, because both use port 8080.
+
+```bash
+docker compose up -d --build   # MongoDB, then the API, then Nginx, each once the one before is healthy
+scripts/smoke-test.sh          # PASS or FAIL for the shop page, the database and the products (exit 0 or 1)
+docker compose down            # stop and remove the containers; the data stays in the mongo-data volume
+```
+
+To load an admin user and 100 sample products, seed once:
+
+```bash
+read -rp 'Admin email: ' ADMIN_EMAIL; read -rsp 'Admin password: ' ADMIN_PASSWORD; echo
+docker compose exec -T server node utils/seed.js "$ADMIN_EMAIL" "$ADMIN_PASSWORD"; unset ADMIN_PASSWORD
+```
+
+Open the shop at <http://127.0.0.1:8080>. Use `127.0.0.1`, not `localhost`, or the support
+chat cannot connect (challenge 10). Only Nginx is published, and only on this machine;
+MongoDB and the API are reachable from the other containers alone.
+
 ## Roadmap
 
 - ✅ **M0 Foundation**: toolchain, repository, branch protection, secret scanning, app import
 - ✅ **M1 App analysis and Bash**: run the app natively, document it, automation scripts
-- ⬜ **M2 Containers**: Dockerfiles, Nginx reverse proxy, Docker Compose
+- ✅ **M2 Containers**: Dockerfiles, Nginx reverse proxy, Docker Compose, smoke test
 - ⬜ **M3 CI/CD and DevSecOps**: Jenkins pipeline, security scans, images pushed to GHCR
 - ⬜ **M4 Kubernetes and Helm**: manifests and a Helm chart deployed to a local k3d cluster
 - ⬜ **M5 Infrastructure as code**: Terraform and Ansible build a k3s server on AWS EC2
@@ -53,7 +77,9 @@ The e-commerce application in [`application/`](application/) is
 [mern-ecommerce](https://github.com/mohamedsamara/mern-ecommerce) by Mohamed Samara,
 vendored at commit `7f73dfb` under its [MIT License](application/LICENSE).
 
-Changed here: four homepage banners were resized to 1920 px wide.
+Changed here: four homepage banners were resized to 1920 px wide; the API gained
+`/api/health` and `/api/health/live` (`server/routes/api/health.js`); and `chalk`
+moved to `dependencies` in `server/package.json`, because the API loads it at runtime.
 
 ## License
 
