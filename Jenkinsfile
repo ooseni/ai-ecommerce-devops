@@ -81,7 +81,9 @@ pipeline {
       }
       steps {
         withCredentials([usernamePassword(credentialsId: 'ghcr', usernameVariable: 'GHCR_USER', passwordVariable: 'GHCR_TOKEN')]) {
-          sh 'echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin'
+          retry(3) {
+            sh 'echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin'
+          }
         }
         // A large layer can time out on a slow link. Layers already uploaded are not sent again.
         retry(3) {
