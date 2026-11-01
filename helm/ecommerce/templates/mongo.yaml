@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  labels:
+    app: mongo
+    {{- include "ecommerce.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  selector:
+    app: mongo
+  ports:
+    - port: 27017
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+  labels:
+    app: mongo
+    {{- include "ecommerce.labels" . | nindent 4 }}
+spec:
+  serviceName: mongo
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+        {{- include "ecommerce.labels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: mongo
+          image: {{ .Values.mongo.image }}
+          args: ["--wiredTigerCacheSizeGB", {{ .Values.mongo.cacheSizeGB | quote }}]
+          ports:
+            - containerPort: 27017
+          # mongosh is a whole Node.js program and takes seconds under a CPU limit, so
+          # it runs only for readiness and gets a long timeout. Liveness needs just the port.
+          readinessProbe:
+            exec:
+              command: ["mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+            initialDelaySeconds: 5
+            periodSeconds: 20
+            timeoutSeconds: 15
+          livenessProbe:
+            tcpSocket:
+              port: 27017
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.mongo.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.mongo.storage }}
+---
+# Only the API and the seed job may reach the database.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mongo-from-api-only
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app: mongo
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              mongo-client: "true"
+      ports:
+        - port: 27017

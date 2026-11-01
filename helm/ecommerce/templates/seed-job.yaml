@@ -1,0 +1,50 @@
+{{- if .Values.seed.enabled }}
+# Runs after each install or upgrade, once the database and the API are ready.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seed
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels:
+        mongo-client: "true"
+        {{- include "ecommerce.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: seed
+          image: {{ .Values.server.image }}:{{ include "ecommerce.tag" . }}
+          command: ["sh", "-c", 'exec node utils/seed.js "$ADMIN_EMAIL" "$ADMIN_PASSWORD"']
+          envFrom:
+            - configMapRef:
+                name: shop-config
+          env:
+            - name: ADMIN_EMAIL
+              value: {{ .Values.seed.adminEmail | quote }}
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shop-secrets
+                  key: ADMIN_PASSWORD
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+          securityContext:
+            {{- include "ecommerce.containerSecurity" . | nindent 12 }}
+{{- end }}

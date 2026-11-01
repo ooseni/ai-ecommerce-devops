@@ -1,0 +1,8 @@
+# k3s on EC2: more room for MongoDB, and at least two Nginx pods.
+client:
+  autoscaling:
+    minReplicas: 2
+    maxReplicas: 4
+
+mongo:
+  storage: 5Gi
