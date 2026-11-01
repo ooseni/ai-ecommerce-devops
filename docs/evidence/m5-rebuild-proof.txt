@@ -1,0 +1,18 @@
+Rebuild proof, 2026-11-01. terraform destroy removed 10 resources; terraform apply recreated 10 from code.
+New address 3.220.108.54 (the old one, 52.23.117.254, no longer answered). Timings run from the end of terraform apply.
+
+ssh open after 0s
+3.220.108.54               : ok=23   changed=14   unreachable=0    failed=0    skipped=0    rescued=0    ignor
+ansible done at 136s
+1
+ip-10-0-1-168   Ready   control-plane   14s   v1.36.5+k3s1
+STATUS: deployed
+REVISION: 1
+deployed at 246s
+Smoke test, http://3.220.108.54, 2026-11-01 21:56:19
+ PASS shop page -> 200
+ PASS API health: database connected
+ PASS products: 100 in the catalogue
+RESULT: PASS
+smoke exit 0; total 248s; 21:56:21
+
