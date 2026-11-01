@@ -1,0 +1,16 @@
+# CI overrides for compose.yaml: run the images this build just made, publish no
+# host port, and leave restarts off so a crash fails the smoke test.
+services:
+  mongo:
+    restart: "no"
+
+  server:
+    image: ${SERVER_IMAGE:?}:${GIT_COMMIT:?}
+    pull_policy: never
+    restart: "no"
+
+  client:
+    image: ${CLIENT_IMAGE:?}:${GIT_COMMIT:?}
+    pull_policy: never
+    ports: !reset []
+    restart: "no"

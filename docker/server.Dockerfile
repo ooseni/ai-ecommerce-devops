@@ -14,6 +14,7 @@ ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY application/server/ ./
-USER node
+# uid 1000 is the node user. Kubernetes runAsNonRoot can verify a number, not a name.
+USER 1000
 EXPOSE 3000
 CMD ["node", "index.js"]

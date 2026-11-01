@@ -1,0 +1,9 @@
+# Plugins baked into the Jenkins image; jenkins-plugin-cli adds their dependencies.
+workflow-aggregator
+git
+docker-workflow
+credentials-binding
+pipeline-graph-view
+pipeline-stage-view
+timestamper
+ws-cleanup

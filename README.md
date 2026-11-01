@@ -59,12 +59,43 @@ Open the shop at <http://127.0.0.1:8080>. Use `127.0.0.1`, not `localhost`, or t
 chat cannot connect (challenge 10). Only Nginx is published, and only on this machine;
 MongoDB and the API are reachable from the other containers alone.
 
+## CI pipeline
+
+[`Jenkinsfile`](Jenkinsfile) runs on every branch. Jenkins checks the repository every two
+minutes, because GitHub's webhooks cannot reach a controller on `127.0.0.1`.
+
+| Stage | What it does | Fails the build when |
+|---|---|---|
+| Lint | shellcheck, shfmt and hadolint | A script or Dockerfile has a warning or an error |
+| Secret scan | gitleaks over the full git history | Any secret is found |
+| Dependency audit | `npm audit` on production packages | Critical findings exceed the baseline |
+| Build images | Both images, tagged with the commit SHA | A build fails |
+| Image scan | Trivy on both images | Critical findings exceed the baseline |
+| Smoke test | Runs those images in a throwaway Compose stack, seeds it and runs `smoke-test.sh` | Any check fails |
+| Push to GHCR | Publishes both images, from `develop` and `main` only | A push fails |
+
+The shop's dependencies were pinned upstream years ago, so failing on any critical finding
+would leave the pipeline red for good. [`ci/security-baseline.env`](ci/security-baseline.env)
+records today's counts instead: a change that adds a critical finding fails, and so does a
+scan whose report cannot be read. A basic GitHub Actions workflow also checks every pull request.
+
+To run Jenkins itself, on <http://127.0.0.1:8081>:
+
+```bash
+export DOCKER_GID=$(stat -c %g /var/run/docker.sock)
+docker compose -f ci/jenkins/compose.yaml up -d --build
+```
+
+It uses the host's Docker Engine through the mounted socket, which is equivalent to root on
+the host. That is acceptable for a single-user lab on loopback, and production would use
+short-lived build agents instead.
+
 ## Roadmap
 
 - ✅ **M0 Foundation**: toolchain, repository, branch protection, secret scanning, app import
 - ✅ **M1 App analysis and Bash**: run the app natively, document it, automation scripts
 - ✅ **M2 Containers**: Dockerfiles, Nginx reverse proxy, Docker Compose, smoke test
-- ⬜ **M3 CI/CD and DevSecOps**: Jenkins pipeline, security scans, images pushed to GHCR
+- ✅ **M3 CI/CD and DevSecOps**: Jenkins pipeline, security scans, images pushed to GHCR
 - ⬜ **M4 Kubernetes and Helm**: manifests and a Helm chart deployed to a local k3d cluster
 - ⬜ **M5 Infrastructure as code**: Terraform and Ansible build a k3s server on AWS EC2
 - ⬜ **M6 Observability**: Prometheus and Grafana metrics, ELK log pipeline

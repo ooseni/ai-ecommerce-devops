@@ -14,6 +14,9 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 | 8 | 2026-10-28 | M2 | Containerised API could not reach MongoDB on 127.0.0.1 |
 | 9 | 2026-10-29 | M2 | Compose rejected compose.yaml |
 | 10 | 2026-10-29 | M2 | Support chat cannot connect at localhost:8080 |
+| 11 | 2026-10-30 | M3 | Critical vulnerabilities would keep the pipeline red for good |
+| 12 | 2026-11-01 | M3 | The GHCR token carries the repo scope |
+| 13 | 2026-11-01 | M3 | Jenkins could not load the job: empty config.xml |
 
 ## 1. Trivy package not found (M0)
 
@@ -84,3 +87,24 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 - **Cause:** `application/client/app/constants/index.js` sends the socket to `http://127.0.0.1:3000` whenever the host name contains `localhost`, a shortcut for the native setup. The container stack publishes only Nginx, so port 3000 is unreachable. The socket opens only for a signed-in user.
 - **Fix (for now):** browse the container stack at `http://127.0.0.1:8080`. The lasting fix, always using the page's own address, is planned with the other upstream changes.
 - **Lesson:** front-end code runs in the user's browser, outside the Docker network, so every address it uses must be one the browser can reach.
+
+## 11. Critical vulnerabilities would keep the pipeline red for good (M3)
+
+- **Symptom:** the scans found 11 critical findings in the API's production packages and 4 in the client's (`npm audit`), and 11 and 1 in the images (Trivy). A gate that fails on any critical finding could never pass.
+- **Cause:** the shop's dependencies were pinned upstream years ago, and `npm audit fix --force` jumps major versions and can break the app.
+- **Decision:** `scripts/security-gate.sh` compares each count with `ci/security-baseline.env` and fails only when a change adds more. An unreadable report also fails, so a scanner that did not run never passes as clean. gitleaks stays a hard gate: any secret fails the build.
+- **Lesson:** a gate that always fails gets switched off. Accept the known debt in writing, block new debt, and lower the baseline as upgrades land.
+
+## 12. The GHCR token carries the repo scope (M3)
+
+- **Symptom:** the token was created for `write:packages` alone, but GitHub's token list shows `repo, write:packages`.
+- **Cause:** on classic tokens, GitHub's page ticks `repo` along with `write:packages`, and it could not be unticked. GHCR does not accept fine-grained tokens.
+- **Decision:** kept the token, and contained the risk: 30-day expiry, stored encrypted in Jenkins, only the push stage reads it, and it is deleted when the project ends. In GitHub Actions, the built-in `GITHUB_TOKEN` with `packages: write` avoids the problem.
+- **Lesson:** check the permissions a token ended up with, not the ones you asked for.
+
+## 13. Jenkins could not load the job: empty config.xml (M3)
+
+- **Symptom:** after a restart the job was missing, and the log said `Failed Loading item ai-ecommerce-devops` and `Unable to read .../config.xml`. The file was 0 bytes, although the command that wrote it had succeeded.
+- **Cause:** the file was piped in with `docker exec jenkins sh -c 'cat > config.xml' < file`. Without `-i`, `docker exec` does not pass stdin on, so `cat` read nothing, wrote an empty file and exited 0.
+- **Fix:** `docker exec -i`. Then Jenkins loaded the job, scanned the repository and ran the first build.
+- **Lesson:** exit code 0 says the command ran, not that it did what you meant. Check the result, here with `wc -c`.
