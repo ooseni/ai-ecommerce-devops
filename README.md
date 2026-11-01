@@ -24,6 +24,8 @@ One connected pipeline that takes every change from a pull request to a running,
 
 ![CI/CD pipeline from a pull request through Jenkins stages to k3d and EC2](docs/diagrams/m8-cicd-pipeline.png)
 
+The reasoning behind every choice is in the [architecture decision record](docs/adr/README.md): 25 decisions, each with its options and costs, plus network, traffic-flow and sequence diagrams.
+
 ## Run it locally
 
 Needs Linux or WSL2 with Docker, Node.js 24, npm and openssl.
