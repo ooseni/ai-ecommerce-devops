@@ -72,7 +72,9 @@ minutes, because GitHub's webhooks cannot reach a controller on `127.0.0.1`.
 | Build images | Both images, tagged with the commit SHA | A build fails |
 | Image scan | Trivy on both images | Critical findings exceed the baseline |
 | Smoke test | Runs those images in a throwaway Compose stack, seeds it and runs `smoke-test.sh` | Any check fails |
-| Push to GHCR | Publishes both images, from `develop` and `main` only | A push fails |
+| Push to GHCR | Publishes both images, from `develop` and `main` only | A push fails after three attempts |
+| Deploy to k3d | `helm upgrade` from `develop`, rolled back if the release does not become healthy | The release fails |
+| Post-deploy check | `smoke-test.sh` through the cluster's ingress | Any check fails |
 
 The shop's dependencies were pinned upstream years ago, so failing on any critical finding
 would leave the pipeline red for good. [`ci/security-baseline.env`](ci/security-baseline.env)
@@ -90,13 +92,39 @@ It uses the host's Docker Engine through the mounted socket, which is equivalent
 the host. That is acceptable for a single-user lab on loopback, and production would use
 short-lived build agents instead.
 
+## Run it on Kubernetes
+
+Needs k3d, kubectl and Helm. The images are public on GHCR, tagged with the commit SHA.
+
+```bash
+k3d cluster create mern-dev --image rancher/k3s:v1.36.5-k3s1 --servers 1 --agents 0 \
+  --port "127.0.0.1:8088:80@loadbalancer" --api-port 127.0.0.1:6445 --wait
+scripts/k8s-deploy.sh dev "$(git rev-parse origin/develop)"  # Helm install; rolls back if unhealthy
+scripts/smoke-test.sh http://127.0.0.1:8088                  # PASS or FAIL through the ingress
+scripts/rolling-update-check.sh                              # restart the pods under traffic; every request must get a 200
+```
+
+The chart in [`helm/ecommerce`](helm/ecommerce) runs MongoDB as a StatefulSet, and the API and
+Nginx as Deployments with probes, resource limits and rolling updates. Every pod runs as
+non-root, the API and Nginx on a read-only root filesystem, and only the API may reach MongoDB.
+Secrets are generated on the first install and kept on upgrades, so none lives in git.
+The API stays at one replica because the support chat keeps online users in memory (challenge
+18), and the autoscaler is on Nginx. [`k8s/`](k8s/) holds the same objects as plain manifests.
+
+For the pipeline to deploy, give Jenkins the cluster's address on the Docker network:
+
+```bash
+k3d kubeconfig get mern-dev | sed 's#https://127.0.0.1:6445#https://k3d-mern-dev-serverlb:6443#' |
+  docker exec -i jenkins sh -c 'umask 077; mkdir -p ~/.kube; cat > ~/.kube/config'
+```
+
 ## Roadmap
 
 - ✅ **M0 Foundation**: toolchain, repository, branch protection, secret scanning, app import
 - ✅ **M1 App analysis and Bash**: run the app natively, document it, automation scripts
 - ✅ **M2 Containers**: Dockerfiles, Nginx reverse proxy, Docker Compose, smoke test
 - ✅ **M3 CI/CD and DevSecOps**: Jenkins pipeline, security scans, images pushed to GHCR
-- ⬜ **M4 Kubernetes and Helm**: manifests and a Helm chart deployed to a local k3d cluster
+- ✅ **M4 Kubernetes and Helm**: manifests and a Helm chart deployed to a local k3d cluster
 - ⬜ **M5 Infrastructure as code**: Terraform and Ansible build a k3s server on AWS EC2
 - ⬜ **M6 Observability**: Prometheus and Grafana metrics, ELK log pipeline
 - ⬜ **M7 AI incident analysis**: log-driven diagnosis and a blue-green release
