@@ -1,0 +1,11 @@
+# Configures the node that Terraform built. From the ansible folder:
+#   ansible-playbook -i "$(terraform -chdir=../terraform output -raw public_ip)," site.yml
+# Safe to run again: every task checks the current state first.
+- name: Configure the k3s node
+  hosts: all
+  become: true
+  roles:
+    - common
+    - hardening
+    - docker
+    - k3s
