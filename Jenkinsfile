@@ -1,5 +1,5 @@
-// CI pipeline: lint, scan for secrets and known vulnerabilities, build both images
-// and scan them. Nothing below a failed stage runs.
+// CI pipeline: lint, scan for secrets and known vulnerabilities, build both images,
+// scan them, and smoke-test them in a throwaway stack. Nothing below a failed stage runs.
 pipeline {
   agent any
 
@@ -56,6 +56,12 @@ pipeline {
         sh 'trivy image --quiet --scanners vuln --severity CRITICAL,HIGH --format json -o reports/trivy-client.json "$CLIENT_IMAGE:$GIT_COMMIT"'
         sh 'scripts/security-gate.sh trivy reports/trivy-server.json trivy_server'
         sh 'scripts/security-gate.sh trivy reports/trivy-client.json trivy_client'
+      }
+    }
+
+    stage('Smoke test') {
+      steps {
+        sh 'scripts/ci-smoke.sh'
       }
     }
   }
