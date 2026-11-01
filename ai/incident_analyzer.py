@@ -3,7 +3,8 @@
 
 Rules find known failure signatures, so the tool works with no network and no API key.
 With --ai, Claude reads the rule findings and the evidence, then adds a plain-language
-explanation. Exit code 0 when nothing matched, 1 when an incident was found.
+explanation. Exit code 1 for a critical or high finding, otherwise 0: a medium finding,
+such as a probe that failed during a start-up, is a warning and not an incident.
 
 Usage:
   scripts/collect-incident.sh | ai/incident_analyzer.py
@@ -151,16 +152,22 @@ def analyze(lines):
     return [finding for finding in findings.values() if finding.count]
 
 
+def is_incident(findings):
+    """True when any finding is serious enough to page someone."""
+    return any(finding.rule.severity in ("critical", "high") for finding in findings)
+
+
 def render(findings, total_lines):
     """Write the findings as a Markdown report."""
     if not findings:
         return f"# Incident report\n\n**No known failure found** in {total_lines} log lines.\n"
 
     likely = findings[0]
+    heading = "Likely cause" if is_incident(findings) else "Warning, no outage signature"
     out = [
         "# Incident report",
         "",
-        f"**Likely cause: {likely.rule.name}** (severity: {likely.rule.severity})",
+        f"**{heading}: {likely.rule.name}** (severity: {likely.rule.severity})",
         "",
         likely.rule.cause,
         "",
@@ -215,7 +222,7 @@ def main():
     findings = analyze(lines)
     report = render(findings, len(lines))
 
-    if args.ai and findings:
+    if args.ai and is_incident(findings):
         try:
             explanation = explain_with_claude(report)
         except Exception as error:  # The rule-based report must survive any API problem.
@@ -228,7 +235,7 @@ def main():
     if args.output:
         with open(args.output, "w", encoding="utf-8") as handle:
             handle.write(report)
-    return 1 if findings else 0
+    return 1 if is_incident(findings) else 0
 
 
 if __name__ == "__main__":

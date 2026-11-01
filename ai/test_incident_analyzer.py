@@ -3,7 +3,7 @@
 
 import unittest
 
-from incident_analyzer import analyze, redact, render
+from incident_analyzer import analyze, is_incident, redact, render
 
 
 class AnalyzeTests(unittest.TestCase):
@@ -32,6 +32,15 @@ class AnalyzeTests(unittest.TestCase):
         for name, line in cases.items():
             with self.subTest(name=name):
                 self.assertEqual(analyze([line])[0].rule.name, name)
+
+    def test_a_probe_warning_alone_is_not_an_incident(self):
+        findings = analyze(["Warning Unhealthy Readiness probe failed during start-up"])
+        self.assertEqual(findings[0].rule.severity, "medium")
+        self.assertFalse(is_incident(findings))
+        self.assertIn("Warning, no outage signature", render(findings, 1))
+
+    def test_a_real_outage_is_an_incident(self):
+        self.assertTrue(is_incident(analyze(["statefulset/mongo replicas: 0"])))
 
     def test_evidence_is_capped_but_every_line_is_counted(self):
         findings = analyze(["MongoNetworkError: failed"] * 20)
