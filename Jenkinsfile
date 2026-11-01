@@ -82,8 +82,13 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'ghcr', usernameVariable: 'GHCR_USER', passwordVariable: 'GHCR_TOKEN')]) {
           sh 'echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin'
         }
-        sh 'docker push "$SERVER_IMAGE:$GIT_COMMIT"'
-        sh 'docker push "$CLIENT_IMAGE:$GIT_COMMIT"'
+        // A large layer can time out on a slow link. Layers already uploaded are not sent again.
+        retry(3) {
+          sh 'docker push "$SERVER_IMAGE:$GIT_COMMIT"'
+        }
+        retry(3) {
+          sh 'docker push "$CLIENT_IMAGE:$GIT_COMMIT"'
+        }
       }
       post {
         always {
