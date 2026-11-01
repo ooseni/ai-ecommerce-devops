@@ -13,7 +13,9 @@ The decisions were recorded after release, from the commits, tests and challenge
 
 ## The design in one page
 
-![System architecture: a shopper reaches Traefik, Nginx, the API and MongoDB on one k3s node on EC2](diagrams/architecture.png)
+<img alt="System architecture: a shopper reaches Traefik, Nginx, the API and MongoDB on one k3s node on EC2" src="diagrams/architecture.png">
+
+To zoom in, right-click the diagram and open the image in a new tab. The editable source is [`diagrams/architecture.drawio`](diagrams/architecture.drawio).
 
 ## Requirements
 
