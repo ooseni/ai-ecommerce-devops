@@ -6,11 +6,11 @@ decision-makers: Oseni Sakariyau Oluwadamilare
 
 # Limit admin ports to the ISP's address range
 
-> In the context of DevOps Platform, facing SSH and the Kubernetes API must reach the node from a laptop whose public address changes: it moved from .7 to .15 within the hour, we decided for allow the ISP's /24 and neglected allow one /32, AWS Systems Manager Session Manager, allow 0.0.0.0/0, to achieve security, reliability, accepting that other customers of the ISP can reach the ports, though they can't authenticate.
+> In the context of DevOps Platform, facing SSH and the Kubernetes API must reach the node from a laptop whose public address changes: it changed within the same range inside an hour, we decided for allow the ISP's /24 and neglected allow one /32, AWS Systems Manager Session Manager, allow 0.0.0.0/0, to achieve security, reliability, accepting that other customers of the ISP can reach the ports, though they can't authenticate.
 
 ## Context and Problem Statement
 
-SSH and the Kubernetes API must reach the node from a laptop whose public address changes: it moved from .7 to .15 within the hour. A /32 rule could lock out Ansible mid-run.
+SSH and the Kubernetes API must reach the node from a laptop whose public address changes: it changed within the same range inside an hour. A /32 rule could lock out Ansible mid-run.
 
 ## Decision Drivers
 
@@ -28,7 +28,7 @@ SSH and the Kubernetes API must reach the node from a laptop whose public addres
 
 Chosen option: "Allow the ISP's /24", because it best meets the decision drivers (security, reliability).
 
-We will allow ports 22 and 6443 from 102.219.152.0/24, and rely on the SSH key and API client certificate for authentication.
+We will allow ports 22 and 6443 from my ISP's /24 range, and rely on the SSH key and API client certificate for authentication.
 
 ### Consequences
 
