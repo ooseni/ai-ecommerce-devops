@@ -1,0 +1,4 @@
+# The same Kubernetes version as the local k3d cluster.
+k3s_version: v1.36.5+k3s1
+# Local file the kubeconfig is written to, with the node's public address in it.
+k3s_kubeconfig_dest: "{{ lookup('env', 'HOME') }}/.kube/ec2-k3s.yaml"

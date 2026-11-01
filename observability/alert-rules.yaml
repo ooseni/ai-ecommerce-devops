@@ -1,0 +1,39 @@
+# Alerts for the shop. Grafana lists them under Alerting, and Alertmanager receives them.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: shop-alerts
+  namespace: monitoring
+spec:
+  groups:
+    - name: shop
+      rules:
+        - alert: ShopAPIDown
+          expr: kube_deployment_status_replicas_available{namespace="shop", deployment="server"} < 1
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: The API has no ready pod. Check MongoDB first, because readiness depends on it.
+        - alert: ShopDatabaseDown
+          expr: (kube_statefulset_status_replicas_ready{namespace="shop", statefulset="mongo"} or vector(0)) < 1
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: MongoDB has no ready pod, so the shop cannot serve data.
+        - alert: ShopPodRestarting
+          expr: increase(kube_pod_container_status_restarts_total{namespace="shop"}[10m]) > 2
+          labels:
+            severity: warning
+          annotations:
+            summary: A shop container restarted more than twice in 10 minutes.
+        - alert: ShopHighErrorRate
+          expr: |
+            sum(rate(traefik_service_requests_total{code=~"5..", exported_service=~"shop-.*"}[5m]))
+              / sum(rate(traefik_service_requests_total{exported_service=~"shop-.*"}[5m])) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: More than 5% of shop requests are failing with a 5xx status.
