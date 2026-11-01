@@ -120,6 +120,21 @@ pipeline {
         sh 'scripts/smoke-test.sh http://k3d-mern-dev-serverlb'
       }
     }
+
+    // main deploys to k3s on EC2. The address comes from the kubeconfig Ansible saved,
+    // so a rebuilt server only needs that file refreshed.
+    stage('Deploy to EC2') {
+      when {
+        branch 'main'
+      }
+      environment {
+        KUBECONFIG = "${env.JENKINS_HOME}/.kube/ec2-k3s.yaml"
+      }
+      steps {
+        sh 'scripts/k8s-deploy.sh prod "$GIT_COMMIT"'
+        sh 'scripts/smoke-test.sh "http://$(kubectl config view --minify -o jsonpath="{.clusters[0].cluster.server}" | sed -E "s#https://([^:]+):.*#\\1#")"'
+      }
+    }
   }
 
   post {
