@@ -15,7 +15,10 @@ MONGO_CONTAINER="${MONGO_CONTAINER:-mongo-dev}"
 failures=0
 
 pass() { printf '  PASS  %s\n' "$1"; }
-fail() { printf '  FAIL  %s\n' "$1"; failures=$((failures + 1)); }
+fail() {
+  printf '  FAIL  %s\n' "$1"
+  failures=$((failures + 1))
+}
 
 # check_http NAME URL: passes when URL answers with 200.
 check_http() {
@@ -38,7 +41,7 @@ fi
 check_http "API" "$API_URL/brand/list"
 check_http "Client" "$CLIENT_URL/"
 
-if (( failures > 0)); then
+if ((failures > 0)); then
   echo "RESULT: FAIL ($failures of 3 checks failed)"
   exit 1
 fi

@@ -18,17 +18,20 @@ step() { printf '\n==> %s\n' "$1"; }
 
 step "Tools"
 for tool in docker node npm openssl; do
-  command -v "$tool" >/dev/null || { echo "missing: $tool" >&2; exit 1; }
+  command -v "$tool" >/dev/null || {
+    echo "missing: $tool" >&2
+    exit 1
+  }
 done
 echo "found docker, node $(node --version), npm $(npm --version), openssl"
 
 step "MongoDB ($MONGO_CONTAINER)"
 state=$(docker inspect -f '{{.State.Running}}' "$MONGO_CONTAINER" 2>/dev/null || true)
 case "$state" in
-  true)  echo "already running" ;;
-  false) docker start "$MONGO_CONTAINER" >/dev/null && echo "started" ;;
-  *)     docker run -d --name "$MONGO_CONTAINER" -p 127.0.0.1:27017:27017 \
-           -v mongo-dev-data:/data/db "$MONGO_IMAGE" >/dev/null && echo "created" ;;
+true) echo "already running" ;;
+false) docker start "$MONGO_CONTAINER" >/dev/null && echo "started" ;;
+*) docker run -d --name "$MONGO_CONTAINER" -p 127.0.0.1:27017:27017 \
+  -v mongo-dev-data:/data/db "$MONGO_IMAGE" >/dev/null && echo "created" ;;
 esac
 
 mongo_ready() {
@@ -37,7 +40,10 @@ mongo_ready() {
 tries=0
 until mongo_ready; do
   tries=$((tries + 1))
-  (( tries < 30 )) || { echo "MongoDB not ready after 30 seconds" >&2; exit 1; }
+  ((tries < 30)) || {
+    echo "MongoDB not ready after 30 seconds" >&2
+    exit 1
+  }
   sleep 1
 done
 echo "ready"
