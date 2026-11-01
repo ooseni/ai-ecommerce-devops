@@ -5,6 +5,8 @@ FROM aquasec/trivy:0.76.1 AS trivy
 FROM zricethezav/gitleaks:v8.30.1 AS gitleaks
 FROM hadolint/hadolint:v2.15.1 AS hadolint
 FROM mvdan/shfmt:v3.14.1 AS shfmt
+FROM registry.k8s.io/kubectl:v1.36.5 AS kubectl
+FROM alpine/helm:4.3.1 AS helm
 
 FROM jenkins/jenkins:2.580.2-lts-jdk21
 
@@ -25,6 +27,8 @@ COPY --from=trivy /usr/local/bin/trivy /usr/local/bin/trivy
 COPY --from=gitleaks /usr/bin/gitleaks /usr/local/bin/gitleaks
 COPY --from=hadolint /bin/hadolint /usr/local/bin/hadolint
 COPY --from=shfmt /bin/shfmt /usr/local/bin/shfmt
+COPY --from=kubectl /bin/kubectl /usr/local/bin/kubectl
+COPY --from=helm /usr/bin/helm /usr/local/bin/helm
 
 USER jenkins
 COPY --chown=jenkins:jenkins plugins.txt /usr/share/jenkins/ref/plugins.txt
