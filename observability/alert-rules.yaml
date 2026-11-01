@@ -16,7 +16,7 @@ spec:
           annotations:
             summary: The API has no ready pod. Check MongoDB first, because readiness depends on it.
         - alert: ShopDatabaseDown
-          expr: (kube_statefulset_status_replicas_ready{namespace="shop", statefulset="mongo"} or vector(0)) < 1
+          expr: kube_statefulset_status_replicas_ready{namespace="shop", statefulset="mongo"} < 1
           for: 1m
           labels:
             severity: critical
