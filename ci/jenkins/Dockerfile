@@ -10,6 +10,8 @@ FROM jenkins/jenkins:2.580.2-lts-jdk21
 
 USER root
 # Docker CLI with the Compose and Buildx plugins, from Docker's apt repository.
+# Both repositories drop old package versions, so pinned versions would break rebuilds.
+# hadolint ignore=DL3008
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates curl jq shellcheck \
   && install -m 0755 -d /etc/apt/keyrings \

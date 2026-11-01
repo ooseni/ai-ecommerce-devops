@@ -1,0 +1,2 @@
+# Warnings and errors fail the build. Info findings stay visible in the log.
+failure-threshold: warning
