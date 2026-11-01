@@ -212,6 +212,7 @@ vite.config.ts.timestamp-*
 # ===== Terraform: github/gitignore Terraform.gitignore =====
 # Local .terraform directories
 .terraform/
+*.tfplan
 tfplan
 
 # .tfstate files
