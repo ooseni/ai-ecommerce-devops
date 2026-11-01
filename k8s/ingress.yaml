@@ -1,0 +1,19 @@
+# Plain manifest. The pipeline deploys the Helm chart in helm/ecommerce; see k8s/README.md.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shop
+  namespace: shop-raw
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: shop-raw.localhost
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: client
+            port:
+              number: 8080
