@@ -27,6 +27,7 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 | 21 | 2026-11-01 | M5 | The first Ansible run lost its connection at the end |
 | 22 | 2026-11-01 | M7 | The incident analyzer flagged a healthy cluster |
 | 23 | 2026-11-01 | M3–M8 | Power outages, a flat battery and a slow clock |
+| 24 | 2026-11-01 | M6 | An alert rule that was always firing |
 
 ## 1. Trivy package not found (M0)
 
@@ -188,3 +189,10 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 - **Effect:** about 5 h 20 min were lost on deadline day alone. Commit `54ef4c3` is stamped 15:38 but was really made around 19:04.
 - **Response:** small commits pushed often, and a saved resume point, so no work was lost. The clock was checked against GitHub's `date` header. The wrong timestamp was disclosed in pull request #9, not rewritten.
 - **Lesson:** small pushed commits are the best protection against an unreliable environment, and a timestamp is a record worth keeping honest.
+
+## 24. An alert rule that was always firing (M6)
+
+- **Symptom:** the Grafana screenshot showed `ShopDatabaseDown` firing while MongoDB was healthy. Seeing it fire during the outage demo had therefore proved nothing.
+- **Cause:** the rule read `(kube_statefulset_status_replicas_ready{...} or vector(0)) < 1`. `vector(0)` has no labels, so `or` kept it beside the real series, and `0 < 1` was always true.
+- **Fix:** removed the `or vector(0)`. The series still exists at 0 when the StatefulSet is scaled down. Then proved it both ways: no shop alerts while healthy, `ShopAPIDown` and `ShopDatabaseDown` firing 100 seconds into a new outage, and both cleared after recovery.
+- **Lesson:** an alert is only proven by watching it stay quiet as well as fire, the same lesson as challenges 5, 19 and 22.

@@ -3,6 +3,10 @@
 services:
   mongo:
     restart: "no"
+    # A busy build machine can take many seconds to start mongosh, so wait longer than Compose does.
+    healthcheck:
+      timeout: 20s
+      retries: 12
 
   server:
     image: ${SERVER_IMAGE:?}:${GIT_COMMIT:?}
