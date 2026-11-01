@@ -1,6 +1,6 @@
 // CI pipeline: lint, scan for secrets and known vulnerabilities, build both images,
-// scan them, smoke-test them in a throwaway stack, and publish them to GHCR.
-// Nothing below a failed stage runs.
+// scan them, smoke-test them in a throwaway stack, publish them to GHCR, deploy them
+// to Kubernetes and check the deployment. Nothing below a failed stage runs.
 pipeline {
   agent any
 
@@ -23,6 +23,7 @@ pipeline {
         sh 'shellcheck scripts/*.sh'
         sh 'shfmt -d -i 2 scripts/*.sh'
         sh 'hadolint docker/server.Dockerfile docker/client.Dockerfile ci/jenkins/Dockerfile'
+        sh 'helm lint helm/ecommerce --set image.tag=lint'
       }
     }
 
@@ -80,7 +81,9 @@ pipeline {
       }
       steps {
         withCredentials([usernamePassword(credentialsId: 'ghcr', usernameVariable: 'GHCR_USER', passwordVariable: 'GHCR_TOKEN')]) {
-          sh 'echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin'
+          retry(3) {
+            sh 'echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin'
+          }
         }
         // A large layer can time out on a slow link. Layers already uploaded are not sent again.
         retry(3) {
@@ -94,6 +97,42 @@ pipeline {
         always {
           sh 'docker logout ghcr.io'
         }
+      }
+    }
+
+    // develop deploys to the local k3d cluster, pulling the images pushed above.
+    // Joining the cluster's network fails harmlessly if Jenkins is already on it.
+    stage('Deploy to k3d') {
+      when {
+        branch 'develop'
+      }
+      steps {
+        sh 'docker network connect k3d-mern-dev jenkins || true'
+        sh 'scripts/k8s-deploy.sh dev "$GIT_COMMIT"'
+      }
+    }
+
+    stage('Post-deploy check') {
+      when {
+        branch 'develop'
+      }
+      steps {
+        sh 'scripts/smoke-test.sh http://k3d-mern-dev-serverlb'
+      }
+    }
+
+    // main deploys to k3s on EC2. The address comes from the kubeconfig Ansible saved,
+    // so a rebuilt server only needs that file refreshed.
+    stage('Deploy to EC2') {
+      when {
+        branch 'main'
+      }
+      environment {
+        KUBECONFIG = "${env.JENKINS_HOME}/.kube/ec2-k3s.yaml"
+      }
+      steps {
+        sh 'scripts/k8s-deploy.sh prod "$GIT_COMMIT"'
+        sh 'scripts/smoke-test.sh "http://$(kubectl config view --minify -o jsonpath="{.clusters[0].cluster.server}" | sed -E "s#https://([^:]+):.*#\\1#")"'
       }
     }
   }

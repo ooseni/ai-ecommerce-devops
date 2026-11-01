@@ -1,0 +1,97 @@
+<mxfile host="Electron" agent="aws-architecture-diagrams" version="31.4.5">
+  <diagram name="M2 container view" id="m2-container-view">
+    <mxGraphModel dx="1600" dy="840" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1600" pageHeight="840" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="host" value="WSL2 Ubuntu host with Docker Engine" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#7D8998;dashed=0;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=10;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="240" y="130" width="990" height="660" as="geometry" />
+        </mxCell>
+        <mxCell id="net" value="Compose network mern-shop_default (bridge; service names resolve through Docker DNS)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#7D8998;dashed=1;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=10;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="290" y="196" width="900" height="404" as="geometry" />
+        </mxCell>
+        <mxCell id="e-browser-client" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=2;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="browser" target="client">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-browser-client-label" value="HTTP&lt;br&gt;127.0.0.1:8080" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#FFFFFF;fontFamily=Arial;fontSize=11;fontColor=#232F3E;" vertex="1" connectable="0" parent="e-browser-client">
+          <mxGeometry x="-0.45" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e-client-server" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=2;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="client" target="server">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-client-server-label" value="/api/, /socket.io/&lt;br&gt;port 3000" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#FFFFFF;fontFamily=Arial;fontSize=11;fontColor=#232F3E;" vertex="1" connectable="0" parent="e-client-server">
+          <mxGeometry x="0" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e-server-mongo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=2;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="server" target="mongo">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-server-mongo-label" value="MONGO_URI&lt;br&gt;mongo:27017" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#FFFFFF;fontFamily=Arial;fontSize=11;fontColor=#232F3E;" vertex="1" connectable="0" parent="e-server-mongo">
+          <mxGeometry x="0" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e-mongo-vol" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=2;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="mongo" target="vol">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-mongo-vol-label" value="/data/db" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#FFFFFF;fontFamily=Arial;fontSize=11;fontColor=#232F3E;" vertex="1" connectable="0" parent="e-mongo-vol">
+          <mxGeometry x="0" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e-smoke-client" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=11;fontColor=#232F3E;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="smoke" target="client">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-smoke-client-label" value="HTTP 8080" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#FFFFFF;fontFamily=Arial;fontSize=11;fontColor=#232F3E;" vertex="1" connectable="0" parent="e-smoke-client">
+          <mxGeometry x="0" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e-env-server" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=11;fontColor=#232F3E;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="env" target="server">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-env-server-label" value="env_file" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#FFFFFF;fontFamily=Arial;fontSize=11;fontColor=#232F3E;" vertex="1" connectable="0" parent="e-env-server">
+          <mxGeometry x="0" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="order" value="&lt;b&gt;Start order&lt;/b&gt; (depends_on: service_healthy):&amp;nbsp; mongo healthy (mongosh ping, 7.8 s)&amp;nbsp; &amp;rarr; &amp;nbsp;server healthy (/api/health, 13.4 s)&amp;nbsp; &amp;rarr; &amp;nbsp;client starts (13.7 s)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DEEBF7;strokeColor=none;fontFamily=Arial;fontSize=12;fontColor=#232F3E;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="320" y="236" width="850" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="browser" value="Web browser&lt;br&gt;&lt;i&gt;&lt;font color=&quot;#5A6C86&quot;&gt;Windows host&lt;/font&gt;&lt;/i&gt;" style="sketch=0;outlineConnect=0;gradientColor=none;strokeColor=none;dashed=0;aspect=fixed;pointerEvents=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;labelWidth=140;fontFamily=Arial;fontSize=12;fontColor=#232F3E;fillColor=#232F3D;shape=mxgraph.aws4.client;" vertex="1" parent="1">
+          <mxGeometry x="66" y="376" width="48" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="client" value="client: Nginx 1.30&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;unprivileged, uid 101, port 8080&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="342" y="355" width="196" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="server" value="server: Express API&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;Node.js 24, uid 1000, port 3000&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="662" y="355" width="196" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="mongo" value="mongo: MongoDB 7.0&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;port 27017, not published&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="982" y="355" width="196" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="smoke" value="scripts/smoke-test.sh&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;same front door, exit 0 or 1&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="340" y="675" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="env" value="application/server/.env&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;read at start, never in the image&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="660" y="675" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="vol" value="mongo-data&lt;br&gt;&lt;i&gt;&lt;font color=&quot;#5A6C86&quot;&gt;named volume&lt;/font&gt;&lt;/i&gt;" style="sketch=0;outlineConnect=0;gradientColor=none;strokeColor=none;dashed=0;aspect=fixed;pointerEvents=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;labelWidth=140;fontFamily=Arial;fontSize=12;fontColor=#232F3E;fillColor=#232F3D;shape=mxgraph.aws4.disk;" vertex="1" parent="1">
+          <mxGeometry x="1056" y="686" width="48" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="step-1" value="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="167" y="347" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="step-2" value="2" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="427" y="313" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="step-3" value="3" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="587" y="347" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="step-4" value="4" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="907" y="347" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="step-5" value="5" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1099" y="507" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="MERN shop on Docker Compose&lt;br&gt;&lt;span style=&quot;font-size:13px;font-weight:normal&quot;&gt;M2 container view: local stack on WSL2, release v0.2.0&lt;/span&gt;" style="text;html=1;fontFamily=Arial;align=left;verticalAlign=top;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="40" y="24" width="1000" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="notes" value="&lt;div&gt;&lt;b style=&quot;font-size:16px&quot;&gt;Legend&lt;/b&gt;&lt;/div&gt;&lt;ol style=&quot;padding-left:20px;margin-top:10px;margin-bottom:10px&quot;&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;The &lt;b&gt;web browser&lt;/b&gt; opens http://127.0.0.1:8080, the only published port. It is bound to loopback, so Docker&#x27;s own firewall rules cannot expose it to the network.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;&lt;b&gt;Nginx&lt;/b&gt; serves the React build itself: hashed JS and CSS cached for a year, index.html never cached, every React route sent to index.html.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;&lt;b&gt;Nginx&lt;/b&gt; forwards /api/ and /socket.io/ (with the WebSocket upgrade) to server:3000, found by name through Docker DNS.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;The &lt;b&gt;API&lt;/b&gt; reads and writes MongoDB at mongo:27017. Compose sets MONGO_URI to the service name.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;&lt;b&gt;MongoDB&lt;/b&gt; keeps its files in the mongo-data named volume, so the data survives docker compose down.&lt;/li&gt;&lt;/ol&gt;&lt;b&gt;Security&lt;/b&gt;&lt;ul style=&quot;padding-left:20px;margin-top:6px;margin-bottom:10px&quot;&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;Both application containers run as non-root users (uid 1000 and 101) on root-owned code.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;Secrets come from .env when the API starts and are never built into an image.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;MongoDB and the API are reachable from the other containers only.&lt;/li&gt;&lt;/ul&gt;&lt;b&gt;Verification&lt;/b&gt;&lt;ul style=&quot;padding-left:20px;margin-top:6px;margin-bottom:10px&quot;&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;smoke-test.sh checks the shop page, the database and the products through port 8080.&lt;/li&gt;&lt;/ul&gt;" style="text;html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=13;fontColor=#232F3E;align=left;verticalAlign=top;strokeColor=none;fillColor=none;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="130" width="310" height="660" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

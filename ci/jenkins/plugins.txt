@@ -1,9 +1,10 @@
 # Plugins baked into the Jenkins image; jenkins-plugin-cli adds their dependencies.
-workflow-aggregator
-git
-docker-workflow
-credentials-binding
-pipeline-graph-view
-pipeline-stage-view
-timestamper
-ws-cleanup
+# Pinned to the versions this pipeline was tested on.
+workflow-aggregator:608.v67378e9d3db_1
+git:5.11.0
+docker-workflow:653.v2f2c08eff0ec
+credentials-binding:728.v902a_273b_8947
+pipeline-graph-view:1053.v9df19e6ceed2
+pipeline-stage-view:2.41
+timestamper:1.30
+ws-cleanup:0.49

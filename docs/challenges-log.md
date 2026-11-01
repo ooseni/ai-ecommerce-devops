@@ -17,6 +17,17 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 | 11 | 2026-10-30 | M3 | Critical vulnerabilities would keep the pipeline red for good |
 | 12 | 2026-11-01 | M3 | The GHCR token carries the repo scope |
 | 13 | 2026-11-01 | M3 | Jenkins could not load the job: empty config.xml |
+| 14 | 2026-11-01 | M3 | The first push to GHCR failed on its largest layer |
+| 15 | 2026-11-01 | M4 | API answered 404 on its own health route |
+| 16 | 2026-11-01 | M4 | API stuck at 503 although MongoDB was up |
+| 17 | 2026-11-01 | M4 | MongoDB never became ready under a CPU limit |
+| 18 | 2026-11-01 | M4 | Two API replicas would break the support chat |
+| 19 | 2026-11-01 | M4 | The zero-downtime check passed with the API scaled to zero |
+| 20 | 2026-11-01 | M5 | The laptop's public address kept changing |
+| 21 | 2026-11-01 | M5 | The first Ansible run lost its connection at the end |
+| 22 | 2026-11-01 | M7 | The incident analyzer flagged a healthy cluster |
+| 23 | 2026-11-01 | M3–M8 | Power outages, a flat battery and a slow clock |
+| 24 | 2026-11-01 | M6 | An alert rule that was always firing |
 
 ## 1. Trivy package not found (M0)
 
@@ -108,3 +119,80 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 - **Cause:** the file was piped in with `docker exec jenkins sh -c 'cat > config.xml' < file`. Without `-i`, `docker exec` does not pass stdin on, so `cat` read nothing, wrote an empty file and exited 0.
 - **Fix:** `docker exec -i`. Then Jenkins loaded the job, scanned the repository and ran the first build.
 - **Lesson:** exit code 0 says the command ran, not that it did what you meant. Check the result, here with `wc -c`.
+
+## 14. The first push to GHCR failed on its largest layer (M3)
+
+- **Symptom:** every gate passed and seven layers uploaded, then the push failed with `failed commit on ref ... net/http: timeout awaiting response headers`. The registry answered normally straight afterwards.
+- **Cause:** not confirmed. It looks like a temporary fault on a slow link: the laptop was on a generator with an unsteady connection. On the next build, the first attempt got `denied` and the second succeeded. A later build failed at `docker login` on a DNS timeout (`lookup ghcr.io ... i/o timeout`).
+- **Fix:** each push and the login now run inside `retry(3)`. Layers already uploaded are not sent again.
+- **Lesson:** a network step in a pipeline will sometimes fail for reasons unrelated to the change, so retry it instead of failing a build whose gates all passed.
+
+## 15. API answered 404 on its own health route (M4)
+
+- **Symptom:** the startup probe on `/api/health/live` failed with status 404 and the pods kept restarting.
+- **Cause:** the API mounts its routes under `BASE_API_URL` and has no default, so with the variable unset the routes sat under `/undefined`. Compose never showed it, because the local `.env` sets `BASE_API_URL=api`.
+- **Fix:** added `BASE_API_URL: api` to the chart's ConfigMap and to the `.env` that `ci-smoke.sh` writes. A ConfigMap change only reaches a pod when it restarts, so the Deployment now carries a hash of the ConfigMap, which rolls the pods when it changes.
+- **Lesson:** a new environment shows which settings were only ever set by a local file.
+
+## 16. API stuck at 503 although MongoDB was up (M4)
+
+- **Symptom:** the pods were `Running` but never ready. Liveness answered 200 and readiness 503, even though `nc -z mongo 27017` from the same pod connected.
+- **Cause:** the API started before MongoDB was ready. Mongoose does not retry a failed first connection, so the process stayed up, disconnected for good. In Compose, `depends_on: service_healthy` had hidden this.
+- **Fix:** an init container waits for `mongo:27017` before the API starts, which is the Kubernetes equivalent of `depends_on`. A connection that drops later still recovers (T13).
+- **Lesson:** Kubernetes makes no promise about start order, so each component must wait for its dependencies or tolerate their absence.
+
+## 17. MongoDB never became ready under a CPU limit (M4)
+
+- **Symptom:** `mongo-0` stayed `0/1` and Helm timed out, although the logs showed the probes connecting and the database running.
+- **Cause:** most likely the probe's 5-second timeout. `mongosh` is a whole Node.js program, slow to start under the 500m CPU limit. Compose had no such limit.
+- **Fix:** readiness keeps `mongosh` with a 15-second timeout and a 20-second period, liveness only checks the port, and the limit went up to 1 CPU. The pod became ready on the next start.
+- **Lesson:** a probe uses the container's own CPU allowance, so a heavy probe under a tight limit can fail on a healthy service.
+
+## 18. Two API replicas would break the support chat (M4)
+
+- **Symptom:** the first chart ran two API pods with an autoscaler, which contradicted the M1 finding that the support chat keeps online users in the API's memory.
+- **Cause:** each pod would hold its own list of users, and Socket.IO's handshake needs every request to reach the same pod.
+- **Decision:** the API stays at one replica and the autoscaler is on Nginx, which holds no state. A rolling update still causes no downtime, because `maxSurge: 1` and `maxUnavailable: 0` keep the old pod until the new one is ready. Scaling the API needs a shared Socket.IO adapter such as Redis.
+- **Lesson:** the replica count is an application decision, not only an infrastructure one. Check where the state lives first.
+
+## 19. The zero-downtime check passed with the API scaled to zero (M4)
+
+- **Symptom:** to prove `rolling-update-check.sh` could fail, the API was scaled to zero and the check run at once. It reported 66 of 66 requests at 200.
+- **Cause:** the pod was still terminating and still serving. The API has no SIGTERM handler, and Node runs as PID 1, where an unhandled SIGTERM is ignored, so the pod lasted its whole grace period (33 s measured). Compose hides this with `init: true`, and Kubernetes has no equivalent setting.
+- **Fix:** repeated the test after the pod had gone: 14 of 28 requests got 502, exit code 1. The check is sound. A SIGTERM handler in the API is listed as a future enhancement.
+- **Lesson:** a negative test must really create the failure. Check the failure is present before trusting the result.
+
+## 20. The laptop's public address kept changing (M5)
+
+- **Symptom:** the address went from `102.219.152.7` to `102.219.152.15` within the hour, while planning a firewall rule for one address.
+- **Cause:** the ISP rotates addresses from a pool, so a `/32` rule could lock out Ansible and kubectl mid-run.
+- **Decision:** the security group allows `102.219.152.0/24` for SSH and the Kubernetes API, not the whole internet. SSH still needs the key, and the API its client certificate.
+- **Lesson:** match a control to how the network really behaves, and record the trade-off.
+
+## 21. The first Ansible run lost its connection at the end (M5)
+
+- **Symptom:** every task applied and the node was `Ready`, then the recap showed `unreachable=1`: `Data could not be sent to remote host`.
+- **Cause:** not confirmed. It happened when the SSH restart handler ran, on an unsteady connection.
+- **Fix:** ran the playbook again: `ok=21 changed=0`, in 61 seconds. SSH passwords and root login were read back as off.
+- **Lesson:** an idempotent playbook makes an interrupted run cheap to repeat.
+
+## 22. The incident analyzer flagged a healthy cluster (M7)
+
+- **Symptom:** on a healthy cluster, the report said "Likely cause: Readiness failing" and exited 1.
+- **Cause:** probe failures from start-up stay in the recent events, so the rule matched old history.
+- **Fix:** only a critical or high finding counts as an incident. A medium finding is reported as a warning and exits 0. Two tests cover it.
+- **Lesson:** test a detector on a healthy system as well as on the failure.
+
+## 23. Power outages, a flat battery and a slow clock (M3–M8)
+
+- **Symptom:** mains power was out for days, with the laptop on a generator. The battery ran flat more than once. After that, the laptop's clock was 58 minutes slow on Oct 30 and about 3 h 26 min slow on Nov 1.
+- **Effect:** about 5 h 20 min were lost on deadline day alone. Commit `54ef4c3` is stamped 15:38 but was really made around 19:04.
+- **Response:** small commits pushed often, and a saved resume point, so no work was lost. The clock was checked against GitHub's `date` header. The wrong timestamp was disclosed in pull request #9, not rewritten.
+- **Lesson:** small pushed commits are the best protection against an unreliable environment, and a timestamp is a record worth keeping honest.
+
+## 24. An alert rule that was always firing (M6)
+
+- **Symptom:** the Grafana screenshot showed `ShopDatabaseDown` firing while MongoDB was healthy. Seeing it fire during the outage demo had therefore proved nothing.
+- **Cause:** the rule read `(kube_statefulset_status_replicas_ready{...} or vector(0)) < 1`. `vector(0)` has no labels, so `or` kept it beside the real series, and `0 < 1` was always true.
+- **Fix:** removed the `or vector(0)`. The series still exists at 0 when the StatefulSet is scaled down. Then proved it both ways: no shop alerts while healthy, `ShopAPIDown` and `ShopDatabaseDown` firing 100 seconds into a new outage, and both cleared after recovery.
+- **Lesson:** an alert is only proven by watching it stay quiet as well as fire, the same lesson as challenges 5, 19 and 22.

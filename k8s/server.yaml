@@ -1,0 +1,119 @@
+# Plain manifest. The pipeline deploys the Helm chart in helm/ecommerce; see k8s/README.md.
+apiVersion: v1
+kind: Service
+metadata:
+  name: server
+  labels:
+    app: server
+  namespace: shop-raw
+spec:
+  selector:
+    app: server
+  ports:
+  - port: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server
+  labels:
+    app: server
+  namespace: shop-raw
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      labels:
+        app: server
+        mongo-client: 'true'
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+      - name: wait-for-mongo
+        image: ghcr.io/ooseni/mern-shop-server:f6b8504521acdecb7634e4cb5e5ab589a6c5e0f6
+        command:
+        - sh
+        - -c
+        - until nc -z -w 2 mongo 27017; do echo waiting for mongo; sleep 2; done
+        resources:
+          limits:
+            cpu: 500m
+            memory: 384Mi
+          requests:
+            cpu: 100m
+            memory: 192Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+      containers:
+      - name: server
+        image: ghcr.io/ooseni/mern-shop-server:f6b8504521acdecb7634e4cb5e5ab589a6c5e0f6
+        envFrom:
+        - configMapRef:
+            name: shop-config
+        env:
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: shop-secrets
+              key: JWT_SECRET
+        ports:
+        - containerPort: 3000
+        startupProbe:
+          httpGet:
+            path: /api/health/live
+            port: 3000
+          periodSeconds: 2
+          failureThreshold: 30
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          periodSeconds: 5
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /api/health/live
+            port: 3000
+          periodSeconds: 10
+          timeoutSeconds: 3
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - sleep
+              - '5'
+        resources:
+          limits:
+            cpu: 500m
+            memory: 384Mi
+          requests:
+            cpu: 100m
+            memory: 192Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
