@@ -1,0 +1,39 @@
+# A basic check on GitHub's runners for pull requests and the long-lived branches.
+# The full pipeline (vulnerability scans, smoke test, image push) runs in Jenkins.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Lint shell scripts
+        run: shellcheck scripts/*.sh
+
+      - name: Lint Dockerfiles
+        run: >-
+          docker run --rm -v "$PWD:/repo:ro" -w /repo hadolint/hadolint:v2.15.1
+          hadolint docker/server.Dockerfile docker/client.Dockerfile ci/jenkins/Dockerfile
+
+      - name: Scan the history for secrets
+        run: >-
+          docker run --rm -v "$PWD:/repo:ro" zricethezav/gitleaks:v8.30.1
+          git --redact --no-banner /repo
+
+      - name: Build the API image
+        run: docker build -f docker/server.Dockerfile -t mern-shop-server:ci .
+
+      - name: Build the shop image
+        run: docker build -f docker/client.Dockerfile -t mern-shop-client:ci .
