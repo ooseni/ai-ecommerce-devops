@@ -164,9 +164,9 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 
 ## 20. The laptop's public address kept changing (M5)
 
-- **Symptom:** the address went from `102.219.152.7` to `102.219.152.15` within the hour, while planning a firewall rule for one address.
+- **Symptom:** the address changed within the same range inside an hour, while planning a firewall rule for one address.
 - **Cause:** the ISP rotates addresses from a pool, so a `/32` rule could lock out Ansible and kubectl mid-run.
-- **Decision:** the security group allows `102.219.152.0/24` for SSH and the Kubernetes API, not the whole internet. SSH still needs the key, and the API its client certificate.
+- **Decision:** the security group allows the ISP's /24 range for SSH and the Kubernetes API, not the whole internet. SSH still needs the key, and the API its client certificate.
 - **Lesson:** match a control to how the network really behaves, and record the trade-off.
 
 ## 21. The first Ansible run lost its connection at the end (M5)
