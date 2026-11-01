@@ -23,6 +23,10 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 | 17 | 2026-11-01 | M4 | MongoDB never became ready under a CPU limit |
 | 18 | 2026-11-01 | M4 | Two API replicas would break the support chat |
 | 19 | 2026-11-01 | M4 | The zero-downtime check passed with the API scaled to zero |
+| 20 | 2026-11-01 | M5 | The laptop's public address kept changing |
+| 21 | 2026-11-01 | M5 | The first Ansible run lost its connection at the end |
+| 22 | 2026-11-01 | M7 | The incident analyzer flagged a healthy cluster |
+| 23 | 2026-11-01 | M3–M8 | Power outages, a flat battery and a slow clock |
 
 ## 1. Trivy package not found (M0)
 
@@ -118,8 +122,8 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 ## 14. The first push to GHCR failed on its largest layer (M3)
 
 - **Symptom:** every gate passed and seven layers uploaded, then the push failed with `failed commit on ref ... net/http: timeout awaiting response headers`. The registry answered normally straight afterwards.
-- **Cause:** not confirmed. It looks like a temporary fault on a slow link: the laptop was on a generator with an unsteady connection. On the next build, the first attempt got `denied` and the second succeeded.
-- **Fix:** each push now runs inside `retry(3)`. Layers already uploaded are not sent again.
+- **Cause:** not confirmed. It looks like a temporary fault on a slow link: the laptop was on a generator with an unsteady connection. On the next build, the first attempt got `denied` and the second succeeded. A later build failed at `docker login` on a DNS timeout (`lookup ghcr.io ... i/o timeout`).
+- **Fix:** each push and the login now run inside `retry(3)`. Layers already uploaded are not sent again.
 - **Lesson:** a network step in a pipeline will sometimes fail for reasons unrelated to the change, so retry it instead of failing a build whose gates all passed.
 
 ## 15. API answered 404 on its own health route (M4)
@@ -156,3 +160,31 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 - **Cause:** the pod was still terminating and still serving. The API has no SIGTERM handler, and Node runs as PID 1, where an unhandled SIGTERM is ignored, so the pod lasted its whole grace period (33 s measured). Compose hides this with `init: true`, and Kubernetes has no equivalent setting.
 - **Fix:** repeated the test after the pod had gone: 14 of 28 requests got 502, exit code 1. The check is sound. A SIGTERM handler in the API is listed as a future enhancement.
 - **Lesson:** a negative test must really create the failure. Check the failure is present before trusting the result.
+
+## 20. The laptop's public address kept changing (M5)
+
+- **Symptom:** the address went from `102.219.152.7` to `102.219.152.15` within the hour, while planning a firewall rule for one address.
+- **Cause:** the ISP rotates addresses from a pool, so a `/32` rule could lock out Ansible and kubectl mid-run.
+- **Decision:** the security group allows `102.219.152.0/24` for SSH and the Kubernetes API, not the whole internet. SSH still needs the key, and the API its client certificate.
+- **Lesson:** match a control to how the network really behaves, and record the trade-off.
+
+## 21. The first Ansible run lost its connection at the end (M5)
+
+- **Symptom:** every task applied and the node was `Ready`, then the recap showed `unreachable=1`: `Data could not be sent to remote host`.
+- **Cause:** not confirmed. It happened when the SSH restart handler ran, on an unsteady connection.
+- **Fix:** ran the playbook again: `ok=21 changed=0`, in 61 seconds. SSH passwords and root login were read back as off.
+- **Lesson:** an idempotent playbook makes an interrupted run cheap to repeat.
+
+## 22. The incident analyzer flagged a healthy cluster (M7)
+
+- **Symptom:** on a healthy cluster, the report said "Likely cause: Readiness failing" and exited 1.
+- **Cause:** probe failures from start-up stay in the recent events, so the rule matched old history.
+- **Fix:** only a critical or high finding counts as an incident. A medium finding is reported as a warning and exits 0. Two tests cover it.
+- **Lesson:** test a detector on a healthy system as well as on the failure.
+
+## 23. Power outages, a flat battery and a slow clock (M3–M8)
+
+- **Symptom:** mains power was out for days, with the laptop on a generator. The battery ran flat more than once. After that, the laptop's clock was 58 minutes slow on Oct 30 and about 3 h 26 min slow on Nov 1.
+- **Effect:** about 5 h 20 min were lost on deadline day alone. Commit `54ef4c3` is stamped 15:38 but was really made around 19:04.
+- **Response:** small commits pushed often, and a saved resume point, so no work was lost. The clock was checked against GitHub's `date` header. The wrong timestamp was disclosed in pull request #9, not rewritten.
+- **Lesson:** small pushed commits are the best protection against an unreliable environment, and a timestamp is a record worth keeping honest.

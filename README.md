@@ -18,6 +18,12 @@ One connected pipeline that takes every change from a pull request to a running,
 - **Observe** metrics (Prometheus, Grafana) and logs (Elasticsearch, Logstash, Kibana)
 - **Diagnose** incidents with an AI tool that reads the error logs
 
+## Architecture
+
+![Final architecture: a shopper reaches Traefik, Nginx, the API and MongoDB on one k3s node on EC2](docs/diagrams/m8-system-architecture.png)
+
+![CI/CD pipeline from a pull request through Jenkins stages to k3d and EC2](docs/diagrams/m8-cicd-pipeline.png)
+
 ## Run it locally
 
 Needs Linux or WSL2 with Docker, Node.js 24, npm and openssl.
@@ -118,6 +124,46 @@ k3d kubeconfig get mern-dev | sed 's#https://127.0.0.1:6445#https://k3d-mern-dev
   docker exec -i jenkins sh -c 'umask 077; mkdir -p ~/.kube; cat > ~/.kube/config'
 ```
 
+## Build it on AWS
+
+Needs Terraform, Ansible and an AWS login. It creates billable resources (a `t3.large` and an Elastic IP, about US$0.09 an hour), so destroy them when finished.
+
+```bash
+terraform -chdir=terraform/bootstrap init && terraform -chdir=terraform/bootstrap apply   # the S3 bucket for state, once
+cd terraform
+cp terraform.tfvars.example terraform.tfvars                                              # your address range and alert email
+terraform init -backend-config=bucket="$(terraform -chdir=bootstrap output -raw bucket)"
+terraform plan -out=tfplan && terraform apply tfplan
+cd ../ansible
+ansible-galaxy collection install -r requirements.yml
+ansible-playbook -i "$(terraform -chdir=../terraform output -raw public_ip)," site.yml    # hardening and k3s; safe to run again
+cd ..
+export KUBECONFIG=~/.kube/ec2-k3s.yaml
+scripts/k8s-deploy.sh prod "$(git rev-parse origin/main)"
+scripts/smoke-test.sh "http://$(terraform -chdir=terraform output -raw public_ip)"
+terraform -chdir=terraform destroy                                                        # when finished
+```
+
+## Watch it
+
+```bash
+scripts/observability-up.sh                                 # Prometheus, Grafana, alert rules and the ELK log pipeline
+kubectl -n monitoring port-forward svc/monitoring-grafana 3000:80   # http://localhost:3000/d/mern-shop
+kubectl -n logging port-forward svc/kibana 5601             # http://localhost:5601, saved search "Application errors"
+```
+
+Neither interface is published. The Grafana password is generated into the `grafana-admin` Secret.
+
+## When something breaks
+
+```bash
+scripts/collect-incident.sh http://<shop address> | ai/incident_analyzer.py
+```
+
+The analyzer reads health, pod states, events and logs, removes secret values, then reports the likely cause, the evidence and what to do. It exits 1 for a critical or high finding. [Here is its report](docs/evidence/m7-incident-report.md) from a deliberately injected MongoDB outage. With `--ai` and an Anthropic API key, Claude adds a plain-language explanation; that option has not yet been run against the live API.
+
+`scripts/blue-green.sh` releases a new Nginx image beside the old one, tests it, switches the Service, and can switch straight back.
+
 ## Roadmap
 
 - ✅ **M0 Foundation**: toolchain, repository, branch protection, secret scanning, app import
@@ -125,10 +171,10 @@ k3d kubeconfig get mern-dev | sed 's#https://127.0.0.1:6445#https://k3d-mern-dev
 - ✅ **M2 Containers**: Dockerfiles, Nginx reverse proxy, Docker Compose, smoke test
 - ✅ **M3 CI/CD and DevSecOps**: Jenkins pipeline, security scans, images pushed to GHCR
 - ✅ **M4 Kubernetes and Helm**: manifests and a Helm chart deployed to a local k3d cluster
-- ⬜ **M5 Infrastructure as code**: Terraform and Ansible build a k3s server on AWS EC2
-- ⬜ **M6 Observability**: Prometheus and Grafana metrics, ELK log pipeline
-- ⬜ **M7 AI incident analysis**: log-driven diagnosis and a blue-green release
-- ⬜ **M8 Report**: architecture diagram, documentation, v1.0.0 release
+- ✅ **M5 Infrastructure as code**: Terraform and Ansible build a k3s server on AWS EC2
+- ✅ **M6 Observability**: Prometheus and Grafana metrics, ELK log pipeline
+- ✅ **M7 AI incident analysis**: log-driven diagnosis and a blue-green release
+- ✅ **M8 Report**: architecture diagram, documentation, v1.0.0 release
 
 ## Credits
 
