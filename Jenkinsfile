@@ -1,5 +1,6 @@
 // CI pipeline: lint, scan for secrets and known vulnerabilities, build both images,
-// scan them, and smoke-test them in a throwaway stack. Nothing below a failed stage runs.
+// scan them, smoke-test them in a throwaway stack, and publish them to GHCR.
+// Nothing below a failed stage runs.
 pipeline {
   agent any
 
@@ -62,6 +63,32 @@ pipeline {
     stage('Smoke test') {
       steps {
         sh 'scripts/ci-smoke.sh'
+      }
+    }
+
+    // Only the long-lived branches publish. The tag is the commit SHA, so an image
+    // in the registry always traces back to one commit that passed every stage above.
+    stage('Push to GHCR') {
+      when {
+        anyOf {
+          branch 'develop'
+          branch 'main'
+        }
+      }
+      environment {
+        DOCKER_CONFIG = "${env.WORKSPACE_TMP}/docker"
+      }
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'ghcr', usernameVariable: 'GHCR_USER', passwordVariable: 'GHCR_TOKEN')]) {
+          sh 'echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin'
+        }
+        sh 'docker push "$SERVER_IMAGE:$GIT_COMMIT"'
+        sh 'docker push "$CLIENT_IMAGE:$GIT_COMMIT"'
+      }
+      post {
+        always {
+          sh 'docker logout ghcr.io'
+        }
       }
     }
   }
