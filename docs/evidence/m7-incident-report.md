@@ -26,10 +26,10 @@ What to do:
 Evidence:
 
 ```
-[pod/client-7bdb9c455c-7rsb8/client] 2026/11/01 19:10:05 [error] 22#22: *295 connect() failed (111: Connection refused) while connecting to upstream, client: 10.42.0.8, server: _, request: "GET /api/category/list HTTP/1.1", upstream: "http://10.43.140.139:3000/api/category/list", host: "52.23.117.25
-[pod/client-7bdb9c455c-7rsb8/client] 2026/11/01 19:10:14 [error] 22#22: *295 connect() failed (111: Connection refused) while connecting to upstream, client: 10.42.0.8, server: _, request: "GET /api/health HTTP/1.1", upstream: "http://10.43.140.139:3000/api/health", host: "52.23.117.254"
-[pod/client-7bdb9c455c-7rsb8/client] 2026/11/01 19:10:15 [error] 22#22: *295 connect() failed (111: Connection refused) while connecting to upstream, client: 10.42.0.8, server: _, request: "GET /api/health HTTP/1.1", upstream: "http://10.43.140.139:3000/api/health", host: "52.23.117.254"
-[pod/client-7bdb9c455c-p4d7z/client] 2026/11/01 19:10:05 [error] 21#21: *291 connect() failed (111: Connection refused) while connecting to upstream, client: 10.42.0.8, server: _, request: "GET /api/brand/list HTTP/1.1", upstream: "http://10.43.140.139:3000/api/brand/list", host: "52.23.117.254", re
+[pod/client-7bdb9c455c-7rsb8/client] 2026/11/01 19:10:05 [error] 22#22: *295 connect() failed (111: Connection refused) while connecting to upstream, client: 10.42.0.8, server: _, request: "GET /api/category/list HTTP/1.1", upstream: "http://10.43.140.139:3000/api/category/list", host: "[elastic-ip-1]
+[pod/client-7bdb9c455c-7rsb8/client] 2026/11/01 19:10:14 [error] 22#22: *295 connect() failed (111: Connection refused) while connecting to upstream, client: 10.42.0.8, server: _, request: "GET /api/health HTTP/1.1", upstream: "http://10.43.140.139:3000/api/health", host: "[elastic-ip-1]"
+[pod/client-7bdb9c455c-7rsb8/client] 2026/11/01 19:10:15 [error] 22#22: *295 connect() failed (111: Connection refused) while connecting to upstream, client: 10.42.0.8, server: _, request: "GET /api/health HTTP/1.1", upstream: "http://10.43.140.139:3000/api/health", host: "[elastic-ip-1]"
+[pod/client-7bdb9c455c-p4d7z/client] 2026/11/01 19:10:05 [error] 21#21: *291 connect() failed (111: Connection refused) while connecting to upstream, client: 10.42.0.8, server: _, request: "GET /api/brand/list HTTP/1.1", upstream: "http://10.43.140.139:3000/api/brand/list", host: "[elastic-ip-1]", re
 [pod/client-7bdb9c455c-p4d7z/client] 2026/11/01 19:10:15 [error] 21#21: *291 connect() failed (111: Connection refused) while connecting to upstream, client: 10.42.0.8, server: _, request: "GET /api/product/list?sortOrder=%7b%22_id%22%3a-1%7d&rating=0&min=1&max=2500 HTTP/1.1", upstream: "http://10.4
 ```
 

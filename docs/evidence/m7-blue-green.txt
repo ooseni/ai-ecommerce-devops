@@ -9,12 +9,12 @@ Smoke test, http://127.0.0.1:18080, 2026-11-01 19:58:03
  PASS products: 100 in the catalogue
 RESULT: PASS
 client Service now selects app=client-green
-Smoke test, http://52.23.117.254, 2026-11-01 19:58:06
+Smoke test, http://[elastic-ip-1], 2026-11-01 19:58:06
  PASS shop page -> 200
  PASS API health: database connected
  PASS products: 100 in the catalogue
 RESULT: PASS
-Green is live. Blue is still running: scripts/blue-green.sh rollback http://52.23.117.254
+Green is live. Blue is still running: scripts/blue-green.sh rollback http://[elastic-ip-1]
 exit 0
 client         2     ghcr.io/ooseni/mern-shop-client:adda9fac42b175ab053764d42fd181d87fc0cb55
 client-green   1     ghcr.io/ooseni/mern-shop-client:f6b8504521acdecb7634e4cb5e5ab589a6c5e0f6
@@ -22,7 +22,7 @@ server         1     ghcr.io/ooseni/mern-shop-server:adda9fac42b175ab053764d42fd
 service selector: {"app":"client-green"}
 --- rollback
 client Service now selects app=client
-Smoke test, http://52.23.117.254, 2026-11-01 19:58:10
+Smoke test, http://[elastic-ip-1], 2026-11-01 19:58:10
  PASS shop page -> 200
  PASS API health: database connected
  PASS products: 100 in the catalogue
