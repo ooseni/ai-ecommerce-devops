@@ -1,0 +1,5 @@
+# Plain manifest. The pipeline deploys the Helm chart in helm/ecommerce; see k8s/README.md.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shop-raw

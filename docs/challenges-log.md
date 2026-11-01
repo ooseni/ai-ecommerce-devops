@@ -17,6 +17,12 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 | 11 | 2026-10-30 | M3 | Critical vulnerabilities would keep the pipeline red for good |
 | 12 | 2026-11-01 | M3 | The GHCR token carries the repo scope |
 | 13 | 2026-11-01 | M3 | Jenkins could not load the job: empty config.xml |
+| 14 | 2026-11-01 | M3 | The first push to GHCR failed on its largest layer |
+| 15 | 2026-11-01 | M4 | API answered 404 on its own health route |
+| 16 | 2026-11-01 | M4 | API stuck at 503 although MongoDB was up |
+| 17 | 2026-11-01 | M4 | MongoDB never became ready under a CPU limit |
+| 18 | 2026-11-01 | M4 | Two API replicas would break the support chat |
+| 19 | 2026-11-01 | M4 | The zero-downtime check passed with the API scaled to zero |
 
 ## 1. Trivy package not found (M0)
 
@@ -108,3 +114,45 @@ Problems met while building the platform, how each was diagnosed and fixed, and 
 - **Cause:** the file was piped in with `docker exec jenkins sh -c 'cat > config.xml' < file`. Without `-i`, `docker exec` does not pass stdin on, so `cat` read nothing, wrote an empty file and exited 0.
 - **Fix:** `docker exec -i`. Then Jenkins loaded the job, scanned the repository and ran the first build.
 - **Lesson:** exit code 0 says the command ran, not that it did what you meant. Check the result, here with `wc -c`.
+
+## 14. The first push to GHCR failed on its largest layer (M3)
+
+- **Symptom:** every gate passed and seven layers uploaded, then the push failed with `failed commit on ref ... net/http: timeout awaiting response headers`. The registry answered normally straight afterwards.
+- **Cause:** not confirmed. It looks like a temporary fault on a slow link: the laptop was on a generator with an unsteady connection. On the next build, the first attempt got `denied` and the second succeeded.
+- **Fix:** each push now runs inside `retry(3)`. Layers already uploaded are not sent again.
+- **Lesson:** a network step in a pipeline will sometimes fail for reasons unrelated to the change, so retry it instead of failing a build whose gates all passed.
+
+## 15. API answered 404 on its own health route (M4)
+
+- **Symptom:** the startup probe on `/api/health/live` failed with status 404 and the pods kept restarting.
+- **Cause:** the API mounts its routes under `BASE_API_URL` and has no default, so with the variable unset the routes sat under `/undefined`. Compose never showed it, because the local `.env` sets `BASE_API_URL=api`.
+- **Fix:** added `BASE_API_URL: api` to the chart's ConfigMap and to the `.env` that `ci-smoke.sh` writes. A ConfigMap change only reaches a pod when it restarts, so the Deployment now carries a hash of the ConfigMap, which rolls the pods when it changes.
+- **Lesson:** a new environment shows which settings were only ever set by a local file.
+
+## 16. API stuck at 503 although MongoDB was up (M4)
+
+- **Symptom:** the pods were `Running` but never ready. Liveness answered 200 and readiness 503, even though `nc -z mongo 27017` from the same pod connected.
+- **Cause:** the API started before MongoDB was ready. Mongoose does not retry a failed first connection, so the process stayed up, disconnected for good. In Compose, `depends_on: service_healthy` had hidden this.
+- **Fix:** an init container waits for `mongo:27017` before the API starts, which is the Kubernetes equivalent of `depends_on`. A connection that drops later still recovers (T13).
+- **Lesson:** Kubernetes makes no promise about start order, so each component must wait for its dependencies or tolerate their absence.
+
+## 17. MongoDB never became ready under a CPU limit (M4)
+
+- **Symptom:** `mongo-0` stayed `0/1` and Helm timed out, although the logs showed the probes connecting and the database running.
+- **Cause:** most likely the probe's 5-second timeout. `mongosh` is a whole Node.js program, slow to start under the 500m CPU limit. Compose had no such limit.
+- **Fix:** readiness keeps `mongosh` with a 15-second timeout and a 20-second period, liveness only checks the port, and the limit went up to 1 CPU. The pod became ready on the next start.
+- **Lesson:** a probe uses the container's own CPU allowance, so a heavy probe under a tight limit can fail on a healthy service.
+
+## 18. Two API replicas would break the support chat (M4)
+
+- **Symptom:** the first chart ran two API pods with an autoscaler, which contradicted the M1 finding that the support chat keeps online users in the API's memory.
+- **Cause:** each pod would hold its own list of users, and Socket.IO's handshake needs every request to reach the same pod.
+- **Decision:** the API stays at one replica and the autoscaler is on Nginx, which holds no state. A rolling update still causes no downtime, because `maxSurge: 1` and `maxUnavailable: 0` keep the old pod until the new one is ready. Scaling the API needs a shared Socket.IO adapter such as Redis.
+- **Lesson:** the replica count is an application decision, not only an infrastructure one. Check where the state lives first.
+
+## 19. The zero-downtime check passed with the API scaled to zero (M4)
+
+- **Symptom:** to prove `rolling-update-check.sh` could fail, the API was scaled to zero and the check run at once. It reported 66 of 66 requests at 200.
+- **Cause:** the pod was still terminating and still serving. The API has no SIGTERM handler, and Node runs as PID 1, where an unhandled SIGTERM is ignored, so the pod lasted its whole grace period (33 s measured). Compose hides this with `init: true`, and Kubernetes has no equivalent setting.
+- **Fix:** repeated the test after the pod had gone: 14 of 28 requests got 502, exit code 1. The check is sound. A SIGTERM handler in the API is listed as a future enhancement.
+- **Lesson:** a negative test must really create the failure. Check the failure is present before trusting the result.

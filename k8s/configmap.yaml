@@ -1,0 +1,11 @@
+# Plain manifest. The pipeline deploys the Helm chart in helm/ecommerce; see k8s/README.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shop-config
+  namespace: shop-raw
+data:
+  NODE_ENV: production
+  PORT: '3000'
+  BASE_API_URL: api
+  MONGO_URI: mongodb://mongo:27017/mern_ecommerce

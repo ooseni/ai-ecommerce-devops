@@ -1,0 +1,61 @@
+# Defaults for every environment. values-dev.yaml and values-prod.yaml override them.
+
+# Commit SHA of the images to run. Required: helm upgrade --set image.tag=<sha>
+image:
+  tag: ""
+
+# The GHCR packages are public, so no login is needed. Name a Secret here for a private one.
+imagePullSecrets: []
+
+server:
+  image: ghcr.io/ooseni/mern-shop-server
+  # One replica: the support chat keeps online users in the API's memory. Scaling
+  # it needs a shared Socket.IO adapter such as Redis, listed as a future enhancement.
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 192Mi
+    limits:
+      cpu: 500m
+      memory: 384Mi
+
+client:
+  image: ghcr.io/ooseni/mern-shop-client
+  # Nginx holds no state, so this is the tier that scales.
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 200m
+      memory: 96Mi
+
+mongo:
+  image: mongo:7.0
+  storage: 1Gi
+  # MongoDB sizes its cache from the machine's memory unless told otherwise.
+  cacheSizeGB: "0.25"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 768Mi
+
+ingress:
+  enabled: true
+  className: traefik
+  # Leave empty to answer on any host name or IP address.
+  host: ""
+
+# Loads the sample catalogue and an admin user after each install or upgrade.
+# The seeder skips whatever already exists. The password is generated into the Secret.
+seed:
+  enabled: true
+  adminEmail: admin@example.com

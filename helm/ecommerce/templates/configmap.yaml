@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shop-config
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+data:
+  NODE_ENV: production
+  PORT: "3000"
+  # The API mounts its routes under this path, and has no default for it.
+  BASE_API_URL: api
+  MONGO_URI: mongodb://mongo:27017/mern_ecommerce
