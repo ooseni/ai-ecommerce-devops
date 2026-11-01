@@ -1,0 +1,161 @@
+<mxfile host="Electron" agent="aws-architecture-diagrams" version="31.4.5">
+  <diagram name="System architecture" id="system-architecture">
+    <mxGraphModel dx="1740" dy="1060" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1740" pageHeight="1060" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cloud" value="AWS Cloud" style="points=[];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=mxgraph.aws4.group;verticalAlign=top;align=left;spacingLeft=30;strokeWidth=1.5;container=0;grIcon=mxgraph.aws4.group_aws_cloud_alt;strokeColor=#232F3E;fillColor=none;fontColor=#232F3E;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="200" y="120" width="1130" height="920" as="geometry" />
+        </mxCell>
+        <mxCell id="region" value="Region us-east-1" style="points=[];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=mxgraph.aws4.group;verticalAlign=top;align=left;spacingLeft=30;strokeWidth=1.5;container=0;grIcon=mxgraph.aws4.group_region;strokeColor=#00A4A6;fillColor=none;fontColor=#232F3E;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="225" y="165" width="1080" height="850" as="geometry" />
+        </mxCell>
+        <mxCell id="vpc" value="VPC 10.0.0.0/16" style="points=[];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=mxgraph.aws4.group;verticalAlign=top;align=left;spacingLeft=30;strokeWidth=1.5;container=0;grIcon=mxgraph.aws4.group_vpc2;strokeColor=#8C4FFF;fillColor=none;fontColor=#232F3E;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="250" y="205" width="850" height="790" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet" value="Public subnet&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;10.0.1.0/24&lt;/font&gt;" style="points=[];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=12;shape=mxgraph.aws4.group;verticalAlign=top;align=left;spacingLeft=30;strokeWidth=1.5;container=0;grIcon=mxgraph.aws4.group_security_group;strokeColor=#7AA116;fillColor=#F2F6E8;fontColor=#232F3E;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="300" y="250" width="780" height="725" as="geometry" />
+        </mxCell>
+        <mxCell id="node" value="EC2 t3.large: k3s v1.36.5 (UFW, fail2ban, IMDSv2, encrypted disk)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#7D8998;dashed=1;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=10;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="325" y="300" width="735" height="655" as="geometry" />
+        </mxCell>
+        <mxCell id="shopns" value="shop namespace" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#7D8998;dashed=1;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=10;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="345" y="340" width="695" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="logns" value="logging namespace" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#7D8998;dashed=1;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=10;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="345" y="510" width="695" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="monns" value="monitoring namespace" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#7D8998;dashed=1;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=10;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="345" y="680" width="695" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="e-shopper-igw" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=2;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="shopper" target="igw">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-shopper-igw-label" value="HTTP 80" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#FFFFFF;fontFamily=Arial;fontSize=11;fontColor=#232F3E;" vertex="1" connectable="0" parent="e-shopper-igw">
+          <mxGeometry x="0" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e-igw-traefik" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=2;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="igw" target="traefik">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-traefik-nginx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=2;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="traefik" target="nginx">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-nginx-api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=2;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="nginx" target="api">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-api-mongo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=2;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="api" target="mongo">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-traefik-filebeat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=11;fontColor=#232F3E;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="traefik" target="filebeat">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-filebeat-logstash" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="filebeat" target="logstash">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-logstash-es" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="logstash" target="es">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-es-kibana" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="es" target="kibana">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-prom-grafana" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="prom" target="grafana">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-laptop-k3sapi" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="laptop" target="k3sapi">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-laptop-k3sapi-label" value="6443, SSH 22&lt;br&gt;admin range" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#FFFFFF;fontFamily=Arial;fontSize=11;fontColor=#232F3E;" vertex="1" connectable="0" parent="e-laptop-k3sapi">
+          <mxGeometry x="-0.55" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e-laptop-ghcr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endSize=8;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=11;fontColor=#232F3E;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="laptop" target="ghcr">
+          <mxGeometry relative="1" as="geometry"></mxGeometry>
+        </mxCell>
+        <mxCell id="e-laptop-ghcr-label" value="docker push" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#FFFFFF;fontFamily=Arial;fontSize=11;fontColor=#232F3E;" vertex="1" connectable="0" parent="e-laptop-ghcr">
+          <mxGeometry x="0" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="shopper" value="Shopper&lt;br&gt;&lt;i&gt;&lt;font color=&quot;#5A6C86&quot;&gt;Web browser&lt;/font&gt;&lt;/i&gt;" style="sketch=0;outlineConnect=0;gradientColor=none;strokeColor=none;dashed=0;aspect=fixed;pointerEvents=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;labelWidth=140;fontFamily=Arial;fontSize=12;fontColor=#232F3E;fillColor=#232F3D;shape=mxgraph.aws4.client;" vertex="1" parent="1">
+          <mxGeometry x="76" y="406" width="48" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="igw" value="Internet gateway" style="sketch=0;outlineConnect=0;gradientColor=none;strokeColor=none;dashed=0;aspect=fixed;pointerEvents=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;labelWidth=140;fontFamily=Arial;fontSize=12;fontColor=#232F3E;fillColor=#8C4FFF;shape=mxgraph.aws4.internet_gateway;labelBackgroundColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="226" y="406" width="48" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="traefik" value="Traefik ingress&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;port 80&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="435" y="398" width="130" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="nginx" value="Nginx (2-4 pods)&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;uid 101, autoscaled&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="585" y="398" width="130" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="Express API&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;uid 1000, 1 pod&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="735" y="398" width="130" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="mongo" value="MongoDB 7.0&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;StatefulSet, 5 GiB&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="885" y="398" width="130" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="filebeat" value="Filebeat&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;reads pod logs&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="435" y="568" width="130" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="logstash" value="Logstash&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;marks errors&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="585" y="568" width="130" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="es" value="Elasticsearch&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;shop-logs-*&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="735" y="568" width="130" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="kibana" value="Kibana&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;saved searches&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="885" y="568" width="130" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="prom" value="Prometheus&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;metrics, alert rules&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="435" y="738" width="130" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="grafana" value="Grafana&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;shop dashboard&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="585" y="738" width="130" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="k3sapi" value="k3s API server&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;port 6443&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="435" y="858" width="130" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" value="Amazon S3&lt;br&gt;&lt;i&gt;&lt;font color=&quot;#5A6C86&quot;&gt;Terraform state&lt;/font&gt;&lt;/i&gt;" style="sketch=0;outlineConnect=0;gradientColor=none;strokeColor=#ffffff;dashed=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;whiteSpace=wrap;labelWidth=140;fontFamily=Arial;fontSize=12;fontColor=#232F3E;fillColor=#7AA116;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;" vertex="1" parent="1">
+          <mxGeometry x="1176" y="406" width="48" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="laptop" value="Laptop (WSL2)&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;Jenkins, k3d, Terraform,
+        Ansible, kubectl&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="15" y="848" width="170" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ghcr" value="GitHub Container&lt;br&gt;&lt;font color=&quot;#5A6C86&quot;&gt;Registry&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#232F3E;strokeWidth=1.5;fontFamily=Arial;fontSize=12;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="25" y="668" width="150" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="step-1" value="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="162" y="389" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="step-2" value="2" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="327" y="389" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="step-3" value="3" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="562" y="382" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="step-4" value="4" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="712" y="382" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="step-5" value="5" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="862" y="382" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="step-6" value="6" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="519" y="517" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="step-7" value="7" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="712" y="552" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="step-8" value="8" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="562" y="722" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="step-9" value="9" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=none;fontFamily=Arial;fontSize=14;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="287" y="849" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="MERN shop on AWS&lt;br&gt;&lt;span style=&quot;font-size:13px;font-weight:normal&quot;&gt;Final architecture: one k3s node on EC2, built by Terraform and Ansible&lt;/span&gt;" style="text;html=1;fontFamily=Arial;align=left;verticalAlign=top;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="40" y="24" width="1000" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="notes" value="&lt;div&gt;&lt;b style=&quot;font-size:16px&quot;&gt;Legend&lt;/b&gt;&lt;/div&gt;&lt;ol style=&quot;padding-left:20px;margin-top:10px;margin-bottom:10px&quot;&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;&lt;b&gt;Shoppers&lt;/b&gt; reach the node&#x27;s fixed Elastic IP on port 80, the only port open to everyone.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;The &lt;b&gt;internet gateway&lt;/b&gt; passes traffic to the public subnet, and the security group admits it.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;&lt;b&gt;Traefik&lt;/b&gt; routes every path to the Nginx Service.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;&lt;b&gt;Nginx&lt;/b&gt; serves the React build and forwards /api and /socket.io to the API.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;The &lt;b&gt;API&lt;/b&gt; reads MongoDB. A NetworkPolicy lets only the API and the seed job connect.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;&lt;b&gt;Filebeat&lt;/b&gt; reads the shop&#x27;s container logs from the node.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;&lt;b&gt;Logstash&lt;/b&gt; marks errors, &lt;b&gt;Elasticsearch&lt;/b&gt; stores them by day, and &lt;b&gt;Kibana&lt;/b&gt; searches them. All stay inside the cluster.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;&lt;b&gt;Prometheus&lt;/b&gt; scrapes nodes, pods and Traefik and evaluates the alert rules. &lt;b&gt;Grafana&lt;/b&gt; shows the dashboard.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;&lt;b&gt;Jenkins&lt;/b&gt; and &lt;b&gt;Helm&lt;/b&gt; deploy through port 6443. SSH and 6443 answer the admin address range only.&lt;/li&gt;&lt;/ol&gt;&lt;b&gt;Security&lt;/b&gt;&lt;ul style=&quot;padding-left:20px;margin-top:6px;margin-bottom:10px&quot;&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;All shop containers run as non-root. The API and Nginx have a read-only root filesystem.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;Secrets are generated at install and live in Kubernetes Secrets, never in git.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;Grafana and Kibana are reached only through kubectl port-forward.&lt;/li&gt;&lt;/ul&gt;&lt;b&gt;Build&lt;/b&gt;&lt;ul style=&quot;padding-left:20px;margin-top:6px;margin-bottom:10px&quot;&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;Terraform creates the network and the node, with its state in Amazon S3.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;Ansible hardens the node and installs k3s.&lt;/li&gt;&lt;li style=&quot;margin-bottom:6px&quot;&gt;k3s pulls the images from the public GHCR packages.&lt;/li&gt;&lt;/ul&gt;" style="text;html=1;whiteSpace=wrap;fontFamily=Arial;fontSize=13;fontColor=#232F3E;align=left;verticalAlign=top;strokeColor=none;fillColor=none;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="120" width="370" height="920" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
