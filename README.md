@@ -1,10 +1,12 @@
 # AI-Powered E-Commerce DevOps Platform
 
-**Type:** internship capstone, lab scale | **Status:** complete, milestones M0 to M8 released as [v1.0.0](https://github.com/ooseni/ai-ecommerce-devops/releases/tag/v1.0.0) | **Live demo:** none, AWS is destroyed when idle to save cost
+<img alt="Davine Technologies Internship Capstone Project" src="https://img.shields.io/badge/Davine%20Technologies-Internship%20Capstone%20Project-6E40C9">
+
+**Type:** Davine Technologies Internship Capstone Project, lab scale | **Status:** complete, milestones M0 to M8 released as [v1.0.0](https://github.com/ooseni/ai-ecommerce-devops/releases/tag/v1.0.0) | **Live demo:** none, AWS is destroyed when idle to save cost
 
 [![CI](https://github.com/ooseni/ai-ecommerce-devops/actions/workflows/ci.yml/badge.svg)](https://github.com/ooseni/ai-ecommerce-devops/actions/workflows/ci.yml)
 
-> **Evaluation project.** The shop's sample catalogue is synthetic, it takes no real payments or customer data, and it is not a production deployment.
+> **Evaluation project.** The capstone that completed my Davine Technologies internship programme. The shop's sample catalogue is synthetic, it takes no real payments or customer data, and it is not a production deployment.
 
 **At a glance**
 
